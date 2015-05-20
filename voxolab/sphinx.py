@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, logging, sys, subprocess
+import os, logging, sys, subprocess, filecmp
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ class Sphinx:
         logger.info("[Make XML]")
         min_file = xml_file + '.min'
         maj_file = xml_file + '.maj'
+        xml_file_tmp = xml_file + '.tmp'
 
         if(not recase and not numbers):
             min_file = xml_file
@@ -65,11 +66,25 @@ class Sphinx:
                 output.flush()
 
         if(numbers):
-            with open(xml_file, "w") as output:
-                #system("./convertirAlphaEnNombreDansXml.pl files/$fic/$fic.xml > files/$fic/$fic.tmp.xml");
-                xml = subprocess.Popen(['./convertirAlphaEnNombreDansXml.pl', maj_file], stdout=output, cwd=self.scripts_dir_bin)       
-                ret_code = xml.wait()
-                output.flush()
+            while(True):
+                with open(xml_file_tmp, "w") as output:
+                    #system("./convertirAlphaEnNombreDansXml.pl files/$fic/$fic.xml > files/$fic/$fic.tmp.xml");
+                    xml = subprocess.Popen(['./convertirAlphaEnNombreDansXml.pl', maj_file], stdout=output, cwd=self.scripts_dir_bin)       
+                    ret_code = xml.wait()
+                    output.flush()
+
+
+                with open(xml_file, "w") as output:
+                    #system("./convertirAlphaEnNombreDansXml.pl files/$fic/$fic.xml > files/$fic/$fic.tmp.xml");
+                    xml = subprocess.Popen(['./convertirAlphaEnNombreDansXml.pl', xml_file_tmp], stdout=output, cwd=self.scripts_dir_bin)       
+                    ret_code = xml.wait()
+                    output.flush()
+
+                if(filecmp.cmp(xml_file, xml_file_tmp, False)):
+                    break
+                else:
+                    maj_file = xml_file
+
 
         logger.info("Conversion to XML finished. File in '{xml}'.".format(xml=xml_file))
 
