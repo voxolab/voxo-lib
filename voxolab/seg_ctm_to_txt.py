@@ -69,7 +69,7 @@ def seg_ctm_to_txt(seg_file, ctm_file, out_file = None, input_encoding = 'iso-88
                 middle = (start + end)/2
                 word = values[4]
 
-                if(word == 'euh'):
+                if(word == 'euh' or (word.startswith('<') and word.endswith('>'))):
                     continue
 
                 speaker_id = segs[last_seg][3].replace('_', ' ').title()
@@ -80,7 +80,7 @@ def seg_ctm_to_txt(seg_file, ctm_file, out_file = None, input_encoding = 'iso-88
 
                 if(middle >= seg[0] and middle <= seg[1]):
                     # Handle spaces after ' and before -
-                    if(not previous_word.endswith("'") and not word.startswith("-")):
+                    if(previous_word is not None and word is not None and not previous_word.endswith("'") and not word.startswith("-")):
                         print(" ", file=output, end="")
                     print(word, file=output, end="")
                 else:
