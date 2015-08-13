@@ -349,6 +349,12 @@ def recase_ctm(source, destination, recasing_path, log_file=None, file_encoding=
 
     return run_command(command, log_file, recasing_path)
 
+def xmlv1_to_v2(source, destination, log_file=None, input_encoding='ISO8859-1', output_encoding='utf-8'):
+    """
+    Convert the old messy format (legacy of the first system) to a cleaner one
+    """
+    print("Converting {} {} to {} {}".format(source, input_encoding, destination, output_encoding))
+
 
 def run_command(command, log_file=None, cwd = None):
     """
