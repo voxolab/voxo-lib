@@ -1,0 +1,21 @@
+<!ELEMENT show (sentence*)>
+<!ELEMENT sentence (word*)>
+<!ELEMENT word (prop*)>
+<!ELEMENT prop EMPTY>
+
+ <!ATTLIST show name CDATA #REQUIRED>
+
+ <!ATTLIST sentence start CDATA #REQUIRED>
+ <!ATTLIST sentence end CDATA #REQUIRED>
+ <!ATTLIST sentence speaker CDATA #REQUIRED>
+ <!ATTLIST sentence type (Studio|Tel) "Studio">
+ <!ATTLIST sentence gender (Male|Female) "Male">
+
+ <!ATTLIST word value CDATA #REQUIRED>
+ <!ATTLIST word start CDATA #REQUIRED>
+ <!ATTLIST word length CDATA #REQUIRED>
+ <!ATTLIST word score CDATA #REQUIRED>
+
+
+ <!ATTLIST prop value CDATA #REQUIRED>
+ <!ATTLIST prop score CDATA #REQUIRED>
