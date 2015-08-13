@@ -29,7 +29,7 @@ def align_xml(xml_file, corrected_file, mwer_segmenter, ref_file = "align-ref.tx
     # Keep alignment values in a list for later use
     logger.info("Opening ref file {}".format(ref_file))
     with open(ref_file, "wt") as out_file:
-        if not authot_format:
+        if authot_format:
             for sentence in root:
                 i=0
                 segment=""
@@ -37,6 +37,7 @@ def align_xml(xml_file, corrected_file, mwer_segmenter, ref_file = "align-ref.tx
                     out_file.write(word.attrib['sel']+"\n")
                     timestamped_words.append((word.attrib['sel'], word.attrib['start'], word.attrib['length']))
         else:
+            #Xml v2 new format
             for sentence in root:
                 i=0
                 segment=""
