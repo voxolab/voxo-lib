@@ -356,6 +356,24 @@ def xmlv1_to_v2(source, destination, log_file=None, input_encoding='ISO8859-1', 
     print("Converting {} {} to {} {}".format(source, input_encoding, destination, output_encoding))
 
 
+    output = []
+    with open(source, "r", encoding=input_encoding) as xmlv1:
+        content = xmlv1.readlines()
+
+        for line in content:
+            line = re.sub('ISO-8859-1', 'utf-8', line)
+            line = re.sub('locuteur=', 'speaker=', line)
+            line = re.sub('sexe=', 'gender=', line)
+            line = re.sub('scoreConfiance=', 'score=', line)
+            line = re.sub('scoreProp=', 'score=', line)
+            line = re.sub('mot=', 'value=', line)
+            line = re.sub('sel=', 'value=', line)
+            output.append(line)
+
+    with open(destination, "w", encoding=output_encoding) as output_f:
+        output_f.write("".join(output))
+
+
 def run_command(command, log_file=None, cwd = None):
     """
     Run a system command and log to a file if provided
