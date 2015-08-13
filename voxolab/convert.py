@@ -370,6 +370,9 @@ def xmlv1_to_v2(source, destination, log_file=None, input_encoding='ISO8859-1', 
             line = re.sub('sel=', 'value=', line)
             output.append(line)
 
+    output.insert(1,"""<!DOCTYPE SHOW PUBLIC "-//VOXOLAB//DTD XML v2.0//EN"
+      "http://docs.voxolab.com/voxolab-xmlv2.dtd">\n""")
+
     with open(destination, "w", encoding=output_encoding) as output_f:
         output_f.write("".join(output))
 
