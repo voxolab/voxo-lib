@@ -37,12 +37,12 @@ def align_xml(xml_file, corrected_file, mwer_segmenter, ref_file = "align-ref.tx
                     out_file.write(word.attrib['sel']+"\n")
                     timestamped_words.append((word.attrib['sel'], word.attrib['start'], word.attrib['length']))
         else:
-            for speaker in root:
+            for sentence in root:
                 i=0
                 segment=""
-                for word in speaker:
-                    out_file.write(word[0].text+"\n")
-                    timestamped_words.append((word[0].text, word.attrib['start'], word.attrib['end']))
+                for word in sentence:
+                    out_file.write(word.attrib['value']+"\n")
+                    timestamped_words.append((word.attrib['value'], word.attrib['start'], word.attrib['length']))
 
 
     return align(timestamped_words, corrected_file, mwer_segmenter, ref_file, outfile)
