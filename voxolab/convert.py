@@ -397,8 +397,9 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
         previous_speaker = speaker
 
 
+    # Last line
     if(len(words) > 0):
-        display_subtitle_line(start_time, time, sub_format, srt_number, words, output)
+        display_subtitle_line(start_time, time, sub_format, srt_number + 1, words, output)
 
     if output is not sys.stdout:
         output.close()
