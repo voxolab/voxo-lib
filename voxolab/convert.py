@@ -101,13 +101,19 @@ def seconds_to_srt_format(seconds):
 
     return start_str
 
+def xml_to_txt(source, destination, source_encoding='utf-8'):
+    entries = xml_to_entries(source, destination, source_encoding)
+    return write_txt(entries, destination)
+
 def xml_to_srt(source, destination, source_encoding='utf-8'):
-    return xml_to_subtitle(source, destination, 'srt', source_encoding)
+    entries = xml_to_entries(source, destination, source_encoding)
+    return write_subtitle(entries, destination, 'srt')
 
 def xml_to_webvtt(source, destination, source_encoding='utf-8'):
-    return xml_to_subtitle(source, destination, 'webvtt', source_encoding)
+    entries = xml_to_entries(source, destination, source_encoding)
+    return write_subtitle(entries, destination, 'webvtt')
 
-def xml_to_subtitle(source, destination = None, sub_format='srt', source_encoding='utf-8'):
+def xml_to_entries(source, destination = None, source_encoding='utf-8'):
 
     # We load the full tree in memory as files should not be too big
     # another solution could be to use the iterparse function
@@ -129,11 +135,12 @@ def xml_to_subtitle(source, destination = None, sub_format='srt', source_encodin
                     continue
 
             entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], should_cut))
+            should_cut = False
 
         should_cut = True
 
 
-    write_subtitle(entries, destination, sub_format)
+    return entries
 
 
 def ctm_to_subtitle(source, destination = None, seg = None, stm = None, sub_format='srt', source_encoding='ISO-8859-1'):
@@ -220,6 +227,56 @@ def ctm_to_subtitle(source, destination = None, seg = None, stm = None, sub_form
             entries.append((word, time, gender, quality, speaker, should_cut))
 
     write_subtitle(entries, destination, sub_format)
+
+def write_txt(entries, destination = None):
+    """Generic function to write a txt output based on data generated 
+    before (by reading a ctm, seg, xml, whatever)
+
+    :entries: list of tuples (word, time, gender, quality, speaker, should_cut)
+    :destination: the destination file
+    :returns: nothing, write to the destination file
+
+    """
+
+    # Write to a file if provided, otherwise write to stdout
+    output = codecs.open(destination, 'w', encoding = 'utf-8') if destination else sys.stdout
+
+    # Init some defaults
+    nb_entries = len(entries)
+    words=[]
+    start_time=0
+    current_time=0
+    new_line=False
+    previous_speaker=None
+    display_speakers=True
+    nb_chars=0
+    next_word= next_time= next_gender= next_quality= next_speaker= next_should_cut = ""
+    content = ''
+
+    print(entries)
+    
+    for i, entry in enumerate(entries):
+        (word, time, gender, quality, speaker, should_cut) = entry
+
+        if(i!=nb_entries -1):
+            (next_word, next_time, next_gender, next_quality, next_speaker, next_should_cut) = entries[i+1]
+
+        # Should I create a new line
+
+        #print(should_cut)
+        if(should_cut or speaker != previous_speaker):
+            content = content + "\n\n"
+
+        content += word + ' '
+        # Keep trace of the previous speaker
+        previous_speaker = speaker
+
+
+    print(content, file=output)
+
+    if output is not sys.stdout:
+        output.close()
+
 
 def write_subtitle(entries, destination = None, sub_format='srt'):
     """Generic function to write a subtitle file (srt, webvtt) based on
