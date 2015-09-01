@@ -3,3 +3,5 @@ env/
 *.xml
 *.txt
 *.ctm
+*.srt
+*.webvtt
