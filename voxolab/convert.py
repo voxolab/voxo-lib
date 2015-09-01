@@ -104,6 +104,9 @@ def seconds_to_srt_format(seconds):
 def xml_to_srt(source, destination, source_encoding='utf-8'):
     return xml_to_subtitle(source, destination, 'srt', source_encoding)
 
+def xml_to_webvtt(source, destination, source_encoding='utf-8'):
+    return xml_to_subtitle(source, destination, 'webvtt', source_encoding)
+
 def xml_to_subtitle(source, destination = None, sub_format='srt', source_encoding='utf-8'):
 
     # We load the full tree in memory as files should not be too big
@@ -117,8 +120,15 @@ def xml_to_subtitle(source, destination = None, sub_format='srt', source_encodin
         sa = sentence.attrib
         for word in sentence:
             wa = word.attrib
+
+            # Remove space after ', and attach the word on the previous line
+            if(len(entries) > 0):
+                last_word, last_time, last_gender, last_quality, last_speaker, last_should_cut = entries[-1]
+                if(last_word.endswith("'")):
+                    entries[-1]=(last_word + wa['value'], last_time, sa['gender'], sa['type'], sa['speaker'], last_should_cut)
+                    continue
+
             entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], should_cut))
-            should_cut = False
 
         should_cut = True
 
