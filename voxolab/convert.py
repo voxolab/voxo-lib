@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, logging, sys, subprocess, datetime, json, re, time, codecs
+import xml.etree.ElementTree as etree
 
 logger = logging.getLogger(__name__)
 
@@ -100,39 +101,34 @@ def seconds_to_srt_format(seconds):
 
     return start_str
 
+def xml_to_srt(source, destination, source_encoding='utf-8'):
+    return xml_to_subtitle(source, destination, 'srt', source_encoding)
+
+def xml_to_subtitle(source, destination = None, sub_format='srt', source_encoding='utf-8'):
+
+    # We load the full tree in memory as files should not be too big
+    # another solution could be to use the iterparse function
+    # Cf. http://effbot.org/zone/element-iterparse.htm
+    tree = etree.parse(source)
+    root = tree.getroot()
+    entries=[]
+    should_cut = False
+    for sentence in root:
+        sa = sentence.attrib
+        for word in sentence:
+            wa = word.attrib
+            entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], should_cut))
+
+
+    write_subtitle(entries, destination, sub_format)
+
+
 def ctm_to_subtitle(source, destination = None, seg = None, stm = None, sub_format='srt', source_encoding='ISO-8859-1'):
 
     """
     Convert a ctm file to the srt subtitle format. 
     Srt files are used by programs like VLC for example
     """
-
-
-    def display_subtitle_line(start_time, time, sub_format, srt_number, words, output):
-        """
-        Utility function to display a subtitle
-        """
-
-        start_str = seconds_to_srt_format(start_time)
-        end_str = seconds_to_srt_format(time)
-
-        # If the format is .srt, we should print the 
-        # subtitle number
-        if(sub_format == 'srt'):
-            print(str(srt_number), file=output)
-
-        # If .srt format, the decimals are separated with ,
-        if(sub_format == 'srt'):
-            start_str = start_str.replace('.', ',')
-            end_str = end_str.replace('.', ',')
-
-        # Display the start/end time
-        print("{start} --> {end}".format(start=start_str, end=end_str), file=output)
-
-        # Add the words to the content
-        content_to_add = ' '.join(words).replace('\n ', '\n')
-        print(content_to_add+"\n", file=output)
-
 
     # Read segmentation information if any
 
@@ -209,6 +205,45 @@ def ctm_to_subtitle(source, destination = None, seg = None, stm = None, sub_form
                     continue
 
             entries.append((word, time, gender, quality, speaker, should_cut))
+
+    write_subtitle(entries, destination, sub_format)
+
+def write_subtitle(entries, destination = None, sub_format='srt'):
+    """Generic function to write a subtitle file (srt, webvtt) based on
+    data that was generated before (by reading a ctm, seg, xml, whatever)
+
+    :entries: list of tuples (word, time, gender, quality, speaker, should_cut)
+    :destination: the destination file
+    :sub_format: the format to write to, srt or webvtt
+    :returns: nothing, write to the destination file
+
+    """
+
+    def display_subtitle_line(start_time, time, sub_format, srt_number, words, output):
+        """
+        Utility function to display a subtitle
+        """
+
+        start_str = seconds_to_srt_format(start_time)
+        end_str = seconds_to_srt_format(time)
+
+        # If the format is .srt, we should print the 
+        # subtitle number
+        if(sub_format == 'srt'):
+            print(str(srt_number), file=output)
+
+        # If .srt format, the decimals are separated with ,
+        if(sub_format == 'srt'):
+            start_str = start_str.replace('.', ',')
+            end_str = end_str.replace('.', ',')
+
+        # Display the start/end time
+        print("{start} --> {end}".format(start=start_str, end=end_str), file=output)
+
+        # Add the words to the content
+        content_to_add = ' '.join(words).replace('\n ', '\n')
+        print(content_to_add+"\n", file=output)
+
 
     # Write to a file if provided, otherwise write to stdout
     output = codecs.open(destination, 'w', encoding = 'utf-8') if destination else sys.stdout
@@ -298,8 +333,6 @@ def ctm_to_subtitle(source, destination = None, seg = None, stm = None, sub_form
     if output is not sys.stdout:
         output.close()
 
-    if seg:
-        seg_file.close()
 
 
 def ctm_to_srt(source, destination, seg = None, stm = None, source_encoding='ISO-8859-1'):
