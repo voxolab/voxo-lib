@@ -253,8 +253,6 @@ def write_txt(entries, destination = None):
     next_word= next_time= next_gender= next_quality= next_speaker= next_should_cut = ""
     content = ''
 
-    print(entries)
-    
     for i, entry in enumerate(entries):
         (word, time, gender, quality, speaker, should_cut) = entry
 
@@ -264,7 +262,7 @@ def write_txt(entries, destination = None):
         # Should I create a new line
 
         #print(should_cut)
-        if(should_cut or speaker != previous_speaker):
+        if(should_cut or (speaker != previous_speaker and previous_speaker is not None)):
             content = content + "\n\n"
 
         content += word + ' '
