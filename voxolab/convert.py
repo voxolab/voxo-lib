@@ -118,6 +118,9 @@ def xml_to_subtitle(source, destination = None, sub_format='srt', source_encodin
         for word in sentence:
             wa = word.attrib
             entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], should_cut))
+            should_cut = False
+
+        should_cut = True
 
 
     write_subtitle(entries, destination, sub_format)
