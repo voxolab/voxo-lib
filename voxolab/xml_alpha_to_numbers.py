@@ -154,45 +154,54 @@ def xml_alpha_to_numbers(root, convert_script):
         else:
             return False
 
-    for i, sentence in enumerate(root):
-        nb_words = len(sentence)
-        for j, word in enumerate(sentence):
+    while(True):
 
-            word.set('length', "{:.2f}".format(float(word.attrib['length'])))
-            check_special_cases(word, sentence, j, nb_words)
+        modified = False
 
-            # If the current word is a number, let's try to get
-            # the next words and see if we can construct a number
-            # from it
+        for i, sentence in enumerate(root):
+            nb_words = len(sentence)
+            for j, word in enumerate(sentence):
 
-            w = word.attrib['sel']
-            idx = j
+                word.set('length', "{:.2f}".format(float(word.attrib['length'])))
+                check_special_cases(word, sentence, j, nb_words)
 
-            if(is_number(w)):
-                in_number = True
-                while(in_number):
-                    if(idx+1 < nb_words):
-                        next_word = sentence[idx+1].attrib['sel']
-                        if(is_number(w + "-" + next_word)):
-                            w = w + "-" + next_word
-                            idx = idx + 1
+                # If the current word is a number, let's try to get
+                # the next words and see if we can construct a number
+                # from it
+
+                w = word.attrib['sel']
+                idx = j
+
+                if(is_number(w)):
+                    in_number = True
+                    while(in_number):
+                        if(idx+1 < nb_words):
+                            next_word = sentence[idx+1].attrib['sel']
+                            if(is_number(w + "-" + next_word)):
+                                w = w + "-" + next_word
+                                idx = idx + 1
+                            else:
+                                in_number = False
                         else:
                             in_number = False
-                    else:
-                        in_number = False
-            # It's seems we found a valid number to transform
-            if(w != word.attrib['sel'] and w in alpha_to_number):
-                print("{} is different from {}".format(w, word.attrib['sel']))
-                print("we took {} words {} {}".format(idx - j, j, idx))
+                # It's seems we found a valid number to transform
+                if(w in alpha_to_number):
+                    print("{} is different from {}".format(w, word.attrib['sel']))
+                    print("we took {} words {} {}".format(idx - j, j, idx))
 
-                last_word = sentence[idx]
-                last_word_end = float(last_word.attrib['start']) + float(last_word.attrib['length'])
-                word.set('sel', alpha_to_number[w])
-                word.set('length', "{:.2f}".format(last_word_end - float(word.attrib['start'])))
-                # Delete the next words we want to merge with the current one
-                for k in range(j+1, idx+1):
-                    print("Removing {}".format(sentence[k].attrib['sel']))
-                    sentence.remove(sentence[k])
+                    last_word = sentence[idx]
+                    last_word_end = float(last_word.attrib['start']) + float(last_word.attrib['length'])
+                    word.set('sel', alpha_to_number[w])
+                    word.set('length', "{:.2f}".format(last_word_end - float(word.attrib['start'])))
+                    # Delete the next words we want to merge with the current one
+                    for k in range(j+1, idx+1):
+                        print("Removing {}".format(sentence[k].attrib['sel']))
+                        sentence.remove(sentence[k])
+
+                    modified = True
+
+        if(not modified):
+            break
 
     xml_string = etree.tostring(root)
     reparsed = minidom.parseString(xml_string)
