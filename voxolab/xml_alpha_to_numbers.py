@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import argparse, subprocess, sys, os, codecs
+import argparse, subprocess, sys, os, codecs, copy
 import xml.etree.ElementTree as etree    
 from xml.dom import minidom
 
@@ -91,10 +91,15 @@ def convert_alpha_to_number(alpha, convert_script, output_encoding):
 
     return result
 
-def xml_alpha_to_numbers(xml_file, convert_script, destination = None, source_encoding = 'ISO-8859-1', output_encoding = 'ISO-8859-1'):
+def xml_alpha_to_numbers_from_file(xml_file, convert_script, destination = None, source_encoding = 'ISO-8859-1', output_encoding = 'ISO-8859-1'):
+    with open(xml_file, "r", encoding=source_encoding) as f:
+        xml_string = f.read()
+        root = etree.fromstring(xml_string)  
+        xml_alpha_to_numbers(root, convert_script)
 
-    tree = etree.parse(xml_file)  
-    root = tree.getroot()                    
+
+def xml_alpha_to_numbers(root, convert_script):
+
 
     def check_special_cases(word, sentence, j, nb_words):
         """TODO: Preprocess values to handle special cases like
@@ -152,14 +157,18 @@ def xml_alpha_to_numbers(xml_file, convert_script, destination = None, source_en
     for i, sentence in enumerate(root):
         nb_words = len(sentence)
         for j, word in enumerate(sentence):
+
+            word.set('length', "{:.2f}".format(float(word.attrib['length'])))
             check_special_cases(word, sentence, j, nb_words)
-            w = word.attrib['sel']
 
             # If the current word is a number, let's try to get
             # the next words and see if we can construct a number
             # from it
+
+            w = word.attrib['sel']
+            idx = j
+
             if(is_number(w)):
-                idx = j
                 in_number = True
                 while(in_number):
                     if(idx+1 < nb_words):
@@ -171,13 +180,25 @@ def xml_alpha_to_numbers(xml_file, convert_script, destination = None, source_en
                             in_number = False
                     else:
                         in_number = False
-
+            # It's seems we found a valid number to transform
             if(w != word.attrib['sel'] and w in alpha_to_number):
                 print("{} is different from {}".format(w, word.attrib['sel']))
+                print("we took {} words {} {}".format(idx - j, j, idx))
+
+                last_word = sentence[idx]
+                last_word_end = float(last_word.attrib['start']) + float(last_word.attrib['length'])
+                word.set('sel', alpha_to_number[w])
+                word.set('length', "{:.2f}".format(last_word_end - float(word.attrib['start'])))
+                # Delete the next words we want to merge with the current one
+                for k in range(j+1, idx+1):
+                    print("Removing {}".format(sentence[k].attrib['sel']))
+                    sentence.remove(sentence[k])
 
     xml_string = etree.tostring(root)
     reparsed = minidom.parseString(xml_string)
-    #print(reparsed.toprettyxml(indent="\t"))
+    print('\n'.join([line for line in reparsed.toprettyxml(indent=' '*2).split('\n') if line.strip()]))
+
+    return root
 
 def ctm_alpha_to_numbers(ctm_file, convert_script, destination = None, source_encoding = 'ISO-8859-1', output_encoding = 'ISO-8859-1'):
 
@@ -293,5 +314,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    xml_alpha_to_numbers(args.xml_file, os.path.realpath(args.convert_script), args.xml_file_output)
+    xml_alpha_to_numbers_from_file(args.xml_file, os.path.realpath(args.convert_script), args.xml_file_output)
 
