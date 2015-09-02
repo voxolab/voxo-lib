@@ -87,6 +87,9 @@ alpha_to_number["neuvième"]="9ème";
 
 ten_with_and = ['vingt', 'trente', 'quarante', 'cinquante', 'soixante']
 
+# Words you don't want to convert
+stop_list = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf']
+
 def convert_alpha_to_number(alpha, convert_script, output_encoding):
     # Call the convert script
     script_dir = os.path.dirname(os.path.realpath(convert_script))
@@ -101,15 +104,44 @@ def convert_alpha_to_number(alpha, convert_script, output_encoding):
 
     return result
 
-def xml_alpha_to_numbers_from_file(xml_file, convert_script, destination = None, source_encoding = 'ISO-8859-1', output_encoding = 'ISO-8859-1'):
+
+def convert_number_to_alpha(number, convert_script, output_encoding):
+    # Call the convert script
+    script_dir = os.path.dirname(os.path.realpath(convert_script))
+    convert = subprocess.Popen([convert_script, alpha], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=script_dir)       
+    result, err = convert.communicate()
+    if(err != b''):
+        # Conversion failed put the words as if
+        result = alpha
+    else:
+        result = result.rstrip().decode(output_encoding)
+                    
+
+    return result
+
+def xml_alpha_to_numbers_from_file(xml_file, alpha_to_number_script, number_to_alpha_script, destination = None, source_encoding = 'ISO-8859-1', output_encoding = 'ISO-8859-1'):
     with open(xml_file, "r", encoding=source_encoding) as f:
         xml_string = f.read()
         root = etree.fromstring(xml_string)  
-        xml_alpha_to_numbers(root, convert_script)
+        xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script)
+
+        xml_string = etree.tostring(root)
+        reparsed = minidom.parseString(xml_string)
+        pretty_xml = '\n'.join([line for line in reparsed.toprettyxml(indent=' '*4).split('\n') if line.strip()])
+
+        # Write to a file if provided, otherwise write to stdout
+        output = codecs.open(destination, 'w', encoding = output_encoding) if destination else sys.stdout
+
+        try:
+            pretty_xml = pretty_xml.replace('<?xml version="1.0"', '<?xml version="1.0" encoding="ISO-8859-1"')
+            print(pretty_xml, file=output)
+        finally:
+            if output is not sys.stdout:
+                output.close()
 
 
-def xml_alpha_to_numbers(root, convert_script):
 
+def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
 
     def check_special_cases(word, sentence, j, nb_words):
         """TODO: Preprocess values to handle special cases like
@@ -147,7 +179,7 @@ def xml_alpha_to_numbers(root, convert_script):
         :sentence: The xml object representing a sentence
         :j: the current word index in the sentence
         :nb_words: total of words in the sentence
-        :returns: TODO
+        :returns: Boolean
 
         """
         if(word in alpha_to_number):
@@ -163,6 +195,26 @@ def xml_alpha_to_numbers(root, convert_script):
             return True
         else:
             return False
+
+    def is_well_formed_number(word, alpha_to_number_script, number_to_alpha_script):
+        """TODO: Check if the number is a well formed one by converting both ways.
+
+        :word: The word to check
+        :alpha_to_number_script: the script path to convert from an alpha to a number
+        :number_to_alpha_script: the script path to convert from a number to an alpha
+        :returns: Boolean
+
+        """
+
+        to_number = convert_alpha_to_number(word, alpha_to_number_script, 'utf-8')
+        to_alpha = convert_alpha_to_number(to_number, number_to_alpha_script, 'utf-8')
+        if(word == to_alpha):
+            return True
+        else:
+            #print("### {} to number {} and then to alpha {}".format(word, to_number, to_alpha))
+            return False
+
+        return True
 
     while(True):
 
@@ -182,156 +234,59 @@ def xml_alpha_to_numbers(root, convert_script):
                 w = word.attrib['sel']
                 idx = j
 
+                number_found = False
+
                 if(is_number(w)):
+                    #print("{} is number".format(w))
                     in_number = True
                     while(in_number):
                         if(idx+1 < nb_words):
                             next_word = sentence[idx+1].attrib['sel']
                             if(is_number(w + "-" + next_word)):
                                 w = w + "-" + next_word
+                                #print("{} is still a number".format(w))
                                 idx = idx + 1
+                                number_found = True
                             else:
                                 in_number = False
                         else:
                             in_number = False
+
                 # It's seems we found a valid number to transform
-                if(w in alpha_to_number):
-                    print("{} is different from {}".format(w, word.attrib['sel']))
-                    print("we took {} words {} {}".format(idx - j, j, idx))
+                if((number_found or w in alpha_to_number) and \
+                        w not in stop_list and \
+                        is_well_formed_number(w, alpha_to_number_script, number_to_alpha_script)):
+                    #print("{} is different from {}".format(w, word.attrib['sel']))
+                    #print("we took {} words {} {} {}".format(idx - j, j, idx, len(sentence)))
 
                     last_word = sentence[idx]
                     last_word_end = float(last_word.attrib['start']) + float(last_word.attrib['length'])
-                    word.set('sel', alpha_to_number[w])
+                    word.set('sel', convert_alpha_to_number(w, alpha_to_number_script, 'iso-8859-1'))
                     word.set('length', "{:.2f}".format(last_word_end - float(word.attrib['start'])))
                     # Delete the next words we want to merge with the current one
                     for k in range(j+1, idx+1):
-                        print("Removing {}".format(sentence[k].attrib['sel']))
-                        sentence.remove(sentence[k])
+                        #print("k = {}".format(j+1))
+                        #print("words number = {}".format(len(sentence)))
+                        #print("Removing {}".format(sentence[j+1].attrib['sel']))
+                        sentence.remove(sentence[j+1])
 
                     modified = True
 
         if(not modified):
             break
 
-    xml_string = etree.tostring(root)
-    reparsed = minidom.parseString(xml_string)
-    print('\n'.join([line for line in reparsed.toprettyxml(indent=' '*2).split('\n') if line.strip()]))
-
     return root
 
-def ctm_alpha_to_numbers(ctm_file, convert_script, destination = None, source_encoding = 'ISO-8859-1', output_encoding = 'ISO-8859-1'):
-
-    # Just read the input ctm
-    ctm_lines = []
-    with open(ctm_file, "r", encoding=source_encoding) as lines:
-        for line in lines:
-            parts = line.rstrip().split(' ')
-            show = parts[0]
-            chan = parts[1]
-            start = parts[2]
-            duration = parts[3]
-            word = parts[4]
-            score = parts[5]
-            ctm_lines.append((show, chan, start, duration, word, score))
-
-    # This is what we will put in our new ctm
-    new_ctm_lines = []
-
-    is_in_alpha=False
-    alpha_to_transform=''
-    alpha_start_index=-1
-
-    next_show=next_chan=next_start=next_duration=next_word=next_score=None
-    nb_lines = len(ctm_lines)
-
-    for i, line in enumerate(ctm_lines):
-        
-        # The current line
-        show, chan, start, duration, word, score = line
-
-        # If the current word is an alpha number
-        if(word in alpha_to_number):
-            # We were already in an alpha number
-            if(is_in_alpha):
-                alpha_to_transform += "-"
-            else:
-                alpha_start_index=i
-
-            alpha_to_transform += word
-            is_in_alpha=True
-        # If the current word is not an alpha number
-        else:
-            # We were in an alpha number before
-            if(is_in_alpha):
-                a_show, a_chan, a_start, a_duration, a_word, a_score = ctm_lines[alpha_start_index]
-                result = convert_alpha_to_number(alpha_to_transform, convert_script, output_encoding)
-
-                add_result = True
-                # Checking for pour cent/%
-                if(result == "100"):
-                    if(len(new_ctm_lines) > 1):
-                        p_show, p_chan, p_start, p_duration, p_word, p_score = new_ctm_lines[-1]
-                        if(p_word == "pour"):
-                            pp_show, pp_chan, pp_start, pp_duration, pp_word, pp_score = new_ctm_lines[-2]
-                            # It's a small number that we should convert again
-                            if(pp_word in alpha_to_number):
-                                pp_word = convert_alpha_to_number(pp_word, convert_script, output_encoding)
-                            try:
-                                # Check if we can convert it to a number
-                                value = float(pp_word.replace(',','.'))
-
-                                # Don't convert value > to 1000
-                                # it's certainly an error
-                                if(value < 1000):
-                                    # Remove the last entry that contains "pour"
-                                    new_ctm_lines.pop()
-                                    # Add % to the number
-                                    new_ctm_lines[-1] = (pp_show, pp_chan, pp_start, pp_duration, pp_word + '%', pp_score)
-
-                                    # We should not add the current word
-                                    add_result = False
-
-
-                            except:
-                                pass
-
-
-
-                # Don't convert small numbers
-                if(len(result) == 1 and int(result) < 10):
-                    result = alpha_to_transform
-
-
-                # Add the new word
-                if(add_result):
-                    new_ctm_lines.append((a_show, a_chan, a_start, a_duration, result, a_score))
-
-                # Reset values
-                alpha_to_transform=""
-                alpha_start_index_at=-1
-
-            new_ctm_lines.append(line)
-            is_in_alpha=False
-
-    # Write to a file if provided, otherwise write to stdout
-    output = codecs.open(destination, 'w', encoding = output_encoding) if destination else sys.stdout
-
-    try:
-        for new_line in new_ctm_lines:
-            show, chan, start, duration, word, score = new_line
-            print(' '.join(str(i) for i in new_line), file=output)
-    finally:
-        if output is not sys.stdout:
-            output.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Transform alphanumerics to numbers')
 
     parser.add_argument("xml_file", help="the xml file.")
     parser.add_argument("xml_file_output", help="the destination xml file.")
-    parser.add_argument("convert_script", help="path to the script used to convert alphanumerics to numbers.")
+    parser.add_argument("alpha_to_number_script", help="path to the script used to convert alphanumerics to numbers.")
+    parser.add_argument("number_to_alpha_script", help="path to the script used to convert numbers to alphanumerics.")
 
     args = parser.parse_args()
 
-    xml_alpha_to_numbers_from_file(args.xml_file, os.path.realpath(args.convert_script), args.xml_file_output)
+    xml_alpha_to_numbers_from_file(args.xml_file, os.path.realpath(args.alpha_to_number_script), os.path.realpath(args.number_to_alpha_script), args.xml_file_output)
 
