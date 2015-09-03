@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
     name='voxo-lib',
@@ -11,7 +11,7 @@ setup(
     license='LICENSE.txt',
     description='Useful Voxolab libs.',
     long_description=open('README.txt').read(),
-    install_requires=[
-        'pytest'
+    requires=[
+        'pytest',
     ],
 )
