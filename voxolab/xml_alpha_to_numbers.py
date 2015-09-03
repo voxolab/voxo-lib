@@ -140,81 +140,81 @@ def xml_alpha_to_numbers_from_file(xml_file, alpha_to_number_script, number_to_a
                 output.close()
 
 
+def check_special_cases(word, sentence, j, nb_words):
+    """TODO: Preprocess values to handle special cases like
+    "cinquante et un" => "cinquante-et-un", 
+    "soixante et onze" => "soixante-et-onze".
+
+    :word: The xml object representing a word
+    :sentence: The xml object representing a sentence
+    :j: the current word index in the sentence
+    :nb_words: total of words in the sentence
+    :returns: side effect 4ever
+
+    """
+
+    w = word.attrib['sel']
+
+    # The current word may be a special case with "et"
+    # cinquante et un (51), soixante et onze (71), …
+    if(w in ten_with_and and \
+            nb_words > j + 2):
+        next_word = sentence[j+1].attrib['sel']
+        next_next_word = sentence[j+2].attrib['sel']
+
+        # Change "cinquante et un" to "cinquante-et-un"
+        if(next_word == 'et' and next_next_word in ['un', 'onze']):
+            new_value = "{}-{}-{}".format(w, next_word, next_next_word)
+            word.set('sel', new_value)
+            sentence.remove(sentence[j+1])
+            sentence.remove(sentence[j+1])
+
+def is_number(word):
+    """TODO: Check if the current word is well-formed number
+
+    :word: The xml object representing a word
+    :sentence: The xml object representing a sentence
+    :j: the current word index in the sentence
+    :nb_words: total of words in the sentence
+    :returns: Boolean
+
+    """
+    if(word in alpha_to_number):
+        return True
+    elif('-' in word):
+        parts = word.split('-')
+        for part in parts:
+            if(part in alpha_to_number):
+                pass
+            else:
+                return False
+
+        return True
+    else:
+        return False
+
+def is_well_formed_number(word, alpha_to_number_script, number_to_alpha_script):
+    """TODO: Check if the number is a well formed one by converting both ways.
+
+    :word: The word to check
+    :alpha_to_number_script: the script path to convert from an alpha to a number
+    :number_to_alpha_script: the script path to convert from a number to an alpha
+    :returns: Boolean
+
+    """
+
+    to_number = convert_alpha_to_number(word, alpha_to_number_script, 'utf-8')
+    to_alpha = convert_alpha_to_number(to_number, number_to_alpha_script, 'utf-8')
+    if(word == to_alpha):
+        return True
+    else:
+        #print("### {} to number {} and then to alpha {}".format(word, to_number, to_alpha))
+        return False
+
+    return True
 
 def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
 
-    def check_special_cases(word, sentence, j, nb_words):
-        """TODO: Preprocess values to handle special cases like
-        "cinquante et un" => "cinquante-et-un", 
-        "soixante et onze" => "soixante-et-onze".
-
-        :word: The xml object representing a word
-        :sentence: The xml object representing a sentence
-        :j: the current word index in the sentence
-        :nb_words: total of words in the sentence
-        :returns: side effect 4ever
-
-        """
-
-        w = word.attrib['sel']
-
-        # The current word may be a special case with "et"
-        # cinquante et un (51), soixante et onze (71), …
-        if(w in ten_with_and and \
-                nb_words > j + 2):
-            next_word = sentence[j+1].attrib['sel']
-            next_next_word = sentence[j+2].attrib['sel']
-
-            # Change "cinquante et un" to "cinquante-et-un"
-            if(next_word == 'et' and next_next_word in ['un', 'onze']):
-                new_value = "{}-{}-{}".format(w, next_word, next_next_word)
-                word.set('sel', new_value)
-                sentence.remove(sentence[j+1])
-                sentence.remove(sentence[j+1])
-
-    def is_number(word):
-        """TODO: Check if the current word is well-formed number
-
-        :word: The xml object representing a word
-        :sentence: The xml object representing a sentence
-        :j: the current word index in the sentence
-        :nb_words: total of words in the sentence
-        :returns: Boolean
-
-        """
-        if(word in alpha_to_number):
-            return True
-        elif('-' in word):
-            parts = word.split('-')
-            for part in parts:
-                if(part in alpha_to_number):
-                    pass
-                else:
-                    return False
-
-            return True
-        else:
-            return False
-
-    def is_well_formed_number(word, alpha_to_number_script, number_to_alpha_script):
-        """TODO: Check if the number is a well formed one by converting both ways.
-
-        :word: The word to check
-        :alpha_to_number_script: the script path to convert from an alpha to a number
-        :number_to_alpha_script: the script path to convert from a number to an alpha
-        :returns: Boolean
-
-        """
-
-        to_number = convert_alpha_to_number(word, alpha_to_number_script, 'utf-8')
-        to_alpha = convert_alpha_to_number(to_number, number_to_alpha_script, 'utf-8')
-        if(word == to_alpha):
-            return True
-        else:
-            #print("### {} to number {} and then to alpha {}".format(word, to_number, to_alpha))
-            return False
-
-        return True
 
     while(True):
 
