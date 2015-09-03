@@ -239,6 +239,7 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                 if(is_number(w)):
                     #print("{} is number".format(w))
                     in_number = True
+                    number_found = True
                     while(in_number):
                         if(idx+1 < nb_words):
                             next_word = sentence[idx+1].attrib['sel']
@@ -246,7 +247,6 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                                 w = w + "-" + next_word
                                 #print("{} is still a number".format(w))
                                 idx = idx + 1
-                                number_found = True
                             else:
                                 in_number = False
                         else:
@@ -269,6 +269,8 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                         #print("words number = {}".format(len(sentence)))
                         #print("Removing {}".format(sentence[j+1].attrib['sel']))
                         sentence.remove(sentence[j+1])
+
+                    nb_words = len(sentence)
 
                     modified = True
 
