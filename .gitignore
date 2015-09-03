@@ -5,3 +5,6 @@ env/
 *.ctm
 *.srt
 *.webvtt
+*.xml*
+*.seg
+*.egg-info/
