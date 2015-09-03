@@ -127,5 +127,8 @@ def full_xml_string():
             <prop mot="quand" scoreProp="0.0147"/>
             <prop mot="picard" scoreProp="0.0132"/>
         </word>
+        <word sel="quinze" start="29.68" length="0.389999999999999" scoreConfiance="0.907">
+            <prop mot="quinze" scoreProp="0.907"/>
+        </word>
     </sentence>
 </show>"""
