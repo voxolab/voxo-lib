@@ -129,12 +129,12 @@ def xml_to_entries(source, destination = None, source_encoding='utf-8'):
 
             # Remove space after ', and attach the word on the previous line
             if(len(entries) > 0):
-                last_word, last_time, last_gender, last_quality, last_speaker, last_should_cut = entries[-1]
+                last_word, last_time, last_gender, last_quality, last_speaker, last_score, last_should_cut = entries[-1]
                 if(last_word.endswith("'")):
-                    entries[-1]=(last_word + wa['value'], last_time, sa['gender'], sa['type'], sa['speaker'], last_should_cut)
+                    entries[-1]=(last_word + wa['value'], last_time, sa['gender'], sa['type'], sa['speaker'], wa['score'], last_should_cut)
                     continue
 
-            entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], should_cut))
+            entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], wa['score'], should_cut))
             should_cut = False
 
         should_cut = True
@@ -250,14 +250,14 @@ def write_txt(entries, destination = None):
     previous_speaker=None
     display_speakers=True
     nb_chars=0
-    next_word= next_time= next_gender= next_quality= next_speaker= next_should_cut = ""
+    next_word= next_time= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
     content = ''
 
     for i, entry in enumerate(entries):
-        (word, time, gender, quality, speaker, should_cut) = entry
+        (word, time, gender, quality, speaker, score, should_cut) = entry
 
         if(i!=nb_entries -1):
-            (next_word, next_time, next_gender, next_quality, next_speaker, next_should_cut) = entries[i+1]
+            (next_word, next_time, next_gender, next_quality, next_speaker, next_score, next_should_cut) = entries[i+1]
 
         # Should I create a new line
 
@@ -265,7 +265,10 @@ def write_txt(entries, destination = None):
         if(should_cut or (speaker != previous_speaker and previous_speaker is not None)):
             content = content + "\n\n"
 
-        content += word + ' '
+        if(float(score) < 0.5):
+            content += '(' + word + '?) '
+        else:
+            content += word + ' '
         # Keep trace of the previous speaker
         previous_speaker = speaker
 
@@ -329,16 +332,16 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
     display_speakers=True
     line_number=0
     nb_chars=0
-    next_word= next_time= next_gender= next_quality= next_speaker= next_should_cut = ""
+    next_word= next_time= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
     
     if(sub_format=='webvtt'):
         print('WEBVTT\n', file=output)
 
     for i, entry in enumerate(entries):
-        (word, time, gender, quality, speaker, should_cut) = entry
+        (word, time, gender, quality, speaker, score, should_cut) = entry
 
         if(i!=nb_entries -1):
-            (next_word, next_time, next_gender, next_quality, next_speaker, next_should_cut) = entries[i+1]
+            (next_word, next_time, next_gender, next_quality, next_speaker, next_score, next_should_cut) = entries[i+1]
 
         if(i == 0):
             start_time = time
