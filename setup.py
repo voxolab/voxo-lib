@@ -11,6 +11,7 @@ setup(
     license='LICENSE.txt',
     description='Useful Voxolab libs.',
     long_description=open('README.txt').read(),
+    data_files=[('bin', ['bin/convertirAlphaEnNombre.pl', 'bin/convertirNombreEnAlpha.pl'])],
     requires=[
         'pytest',
     ],

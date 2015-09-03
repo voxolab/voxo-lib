@@ -194,9 +194,9 @@ def is_number(word):
         return False
 
 def is_well_formed_number(word, alpha_to_number_script, number_to_alpha_script):
-    """TODO: Check if the number is a well formed one by converting both ways.
+    """TODO: Check if the alpha number is a well formed one by converting both ways.
 
-    :word: The word to check
+    :word: The word to check (alpha number)
     :alpha_to_number_script: the script path to convert from an alpha to a number
     :number_to_alpha_script: the script path to convert from a number to an alpha
     :returns: Boolean

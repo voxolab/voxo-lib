@@ -1,11 +1,19 @@
 import pytest
+import os
 
 @pytest.fixture
 def full_xml_root(full_xml_string):
     import xml.etree.ElementTree as etree    
     root = etree.fromstring(full_xml_string)  
     return root
+
+@pytest.fixture
+def alpha_to_number_script():
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'bin', 'convertirAlphaEnNombre.pl')
     
+@pytest.fixture
+def number_to_alpha_script():
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'bin', 'convertirNombreEnAlpha.pl')
 
 @pytest.fixture
 def full_xml_string():
