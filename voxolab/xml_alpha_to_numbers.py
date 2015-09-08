@@ -42,6 +42,7 @@ number_to_alpha = {
         "50":"cinquante",
         "51":"cinquante-et-un",
         "60":"soixante",
+        "61":"soixante-et-un",
         "70":"soixante-dix",
         "71":"soixante-et-onze",
         "72":"soixante-douze",
@@ -210,6 +211,7 @@ def is_well_formed_number(word, alpha_to_number_script, number_to_alpha_script):
 
     to_number = convert_alpha_to_number(word, alpha_to_number_script, 'utf-8')
     to_alpha = convert_alpha_to_number(to_number, number_to_alpha_script, 'utf-8')
+
     if(word == to_alpha):
         return True
     else:
@@ -264,7 +266,7 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                 if((number_found or w in alpha_to_number) and \
                         w not in stop_list and \
                         is_well_formed_number(w, alpha_to_number_script, number_to_alpha_script)):
-                    #print("{} is different from {}".format(w, word.attrib['sel']))
+                    #print("#### {} is different from {}".format(w, word.attrib['sel']))
                     #print("we took {} words {} {} {}".format(idx - j, j, idx, len(sentence)))
 
                     last_word = sentence[idx]

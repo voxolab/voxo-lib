@@ -56,6 +56,7 @@ sub initNumberTab{
                 "50"=>"cinquante",
                 "51"=>"cinquante-et-un",
                 "60"=>"soixante",
+                "61"=>"soixante-et-un",
                 "70"=>"soixante-dix",
                 "71"=>"soixante-et-onze",
                 "72"=>"soixante-douze",

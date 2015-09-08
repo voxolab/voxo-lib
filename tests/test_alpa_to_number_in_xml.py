@@ -14,6 +14,7 @@ class TestAlphaToNumberInXml:
         assert is_number('trois')
         assert is_number('vingt-trois')
         assert is_number('quinze')
+        assert is_number('soixante-et-un')
         assert not is_number('vingt-trois-test')
         assert not is_number('trentetrois')
         assert not is_number('trente trois')
@@ -26,7 +27,10 @@ class TestAlphaToNumberInXml:
         assert is_well_formed_number('zéro-trois', alpha_to_number_script, number_to_alpha_script)
         assert is_well_formed_number('zéro-zéro', alpha_to_number_script, number_to_alpha_script)
         assert is_well_formed_number('quinze', alpha_to_number_script, number_to_alpha_script)
+        assert is_well_formed_number('soixante-et-un', alpha_to_number_script, number_to_alpha_script)
+
         assert not is_well_formed_number('trois-quarante', alpha_to_number_script, number_to_alpha_script)
+
 
     def test_full_transform(self, full_xml_root, alpha_to_number_script, number_to_alpha_script):
         xml_alpha_to_numbers(full_xml_root, alpha_to_number_script, number_to_alpha_script)
@@ -42,3 +46,9 @@ class TestAlphaToNumberInXml:
         assert full_xml_root[2][7].attrib['sel'] == '76'
         assert full_xml_root[2][8].attrib['sel'] == 'à'
         assert full_xml_root[2][11].attrib['sel'] == '15'
+
+
+        assert full_xml_root[3][0].attrib['sel'] == '01'
+        assert full_xml_root[3][1].attrib['sel'] == '61'
+        assert full_xml_root[3][2].attrib['sel'] == '30'
+        assert full_xml_root[3][3].attrib['sel'] == '80'
