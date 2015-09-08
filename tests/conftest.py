@@ -131,4 +131,34 @@ def full_xml_string():
             <prop mot="quinze" scoreProp="0.907"/>
         </word>
     </sentence>
+
+    <sentence start="0.00" end="12.09" locuteur="S0" type="Tel" sexe="Female">
+
+        <word sel="zéro" start="9.35" length="0.33" scoreConfiance="1.00">
+            <prop mot="zéro" scoreProp="1.00"/>
+        </word>
+        <word sel="un" start="9.68" length="0.120000000000001" scoreConfiance="1.00">
+            <prop mot="un" scoreProp="1.00"/>
+        </word>
+        <word sel="soixante" start="9.8" length="0.51" scoreConfiance="1.00">
+            <prop mot="soixante" scoreProp="1.00"/>
+        </word>
+        <word sel="et" start="10.31" length="0.0800000000000001" scoreConfiance="1.00">
+            <prop mot="et" scoreProp="1.00"/>
+        </word>
+        <word sel="un" start="10.39" length="0.19" scoreConfiance="1.00">
+            <prop mot="un" scoreProp="1.00"/>
+        </word>
+        <word sel="trente" start="10.69" length="0.48" scoreConfiance="1.00">
+            <prop mot="trente" scoreProp="1.00"/>
+        </word>
+        <word sel="quatre" start="11.28" length="0.32" scoreConfiance="0.998">
+            <prop mot="quatre" scoreProp="0.998"/>
+        </word>
+        <word sel="vingt" start="11.6" length="0.27" scoreConfiance="0.673">
+            <prop mot="vingt" scoreProp="0.673"/>
+            <prop mot="vingts" scoreProp="0.326"/>
+        </word>
+    </sentence>
+
 </show>"""
