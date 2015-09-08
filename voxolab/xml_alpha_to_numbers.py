@@ -149,7 +149,7 @@ def check_special_cases(word, sentence, j, nb_words):
     :sentence: The xml object representing a sentence
     :j: the current word index in the sentence
     :nb_words: total of words in the sentence
-    :returns: side effect 4ever
+    :returns: True if we have modified the sentence
 
     """
 
@@ -157,6 +157,8 @@ def check_special_cases(word, sentence, j, nb_words):
 
     # The current word may be a special case with "et"
     # cinquante et un (51), soixante et onze (71), …
+
+    modified = False
     if(w in ten_with_and and \
             nb_words > j + 2):
         next_word = sentence[j+1].attrib['sel']
@@ -168,6 +170,9 @@ def check_special_cases(word, sentence, j, nb_words):
             word.set('sel', new_value)
             sentence.remove(sentence[j+1])
             sentence.remove(sentence[j+1])
+            modified = True
+
+    return modified
 
 def is_number(word):
     """TODO: Check if the current word is well-formed number
@@ -225,7 +230,10 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
             for j, word in enumerate(sentence):
 
                 word.set('length', "{:.2f}".format(float(word.attrib['length'])))
-                check_special_cases(word, sentence, j, nb_words)
+
+                # Recompute the number of words if we have modified the sentence
+                if(check_special_cases(word, sentence, j, nb_words)):
+                    nb_words = len(sentence)
 
                 # If the current word is a number, let's try to get
                 # the next words and see if we can construct a number
@@ -237,7 +245,7 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                 number_found = False
 
                 if(is_number(w)):
-                    #print("{} is number".format(w))
+                    #print("{} is number at index {},{}".format(w, i, j))
                     in_number = True
                     number_found = True
                     while(in_number):

@@ -4,10 +4,11 @@ from voxolab.xml_alpha_to_numbers import is_number, is_well_formed_number, xml_a
 class TestAlphaToNumberInXml:
 
     def test_good_xml(self, full_xml_root):
-        assert len(full_xml_root) == 3
+        assert len(full_xml_root) == 4
         assert len(full_xml_root[0]) == 10
         assert len(full_xml_root[1]) == 2
         assert len(full_xml_root[2]) == 18
+        assert len(full_xml_root[3]) == 8
 
     def test_is_number(self):
         assert is_number('trois')
