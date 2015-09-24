@@ -38,7 +38,7 @@ def ne_to_string(ne):
 
     return '-'.join(parts)
 
-def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_file = None, input_encoding = 'iso-8859-1', output_encoding = 'iso-8859-1'):
+def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_file = None, input_encoding = 'utf-8', output_encoding = 'utf-8'):
 
     word_list = []
     named_entities = {}
@@ -96,6 +96,8 @@ def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_fil
 
     cut_index = 0
     nb_cuts = len(cuts)
+    first_frame = None
+
     with open(seg_file, 'r', encoding=input_encoding) as seg:
         with open(ctm_file, 'r', encoding=input_encoding) as ctm:
 
@@ -109,6 +111,11 @@ def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_fil
                 scores = {}
 
                 for line in seg:
+
+                    # Skip empty lines
+                    if(line.rstrip() == ''):
+                        continue
+
                     # This is a comment line with some information about the scores
                     if line.startswith(';;'):
                         match_obj = re.match(r'^;; cluster (\S+).*neuralScore = (\S+).*', line)
@@ -127,6 +134,9 @@ def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_fil
                     else:
                         gender = 'Homme'
 
+                    if(first_frame is None):
+                        first_frame = start
+
                     for i in range(start, start + duration):
                         frames[i] = gender, values[5], values[7]
 
@@ -137,13 +147,25 @@ def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_fil
                 sentence = []
 
                 for line in ctm:
+
+                    if(line.rstrip() == ''):
+                        continue 
+
                     should_cut = False
                     values = line.split()
                     # Use the same start format than in the .seg file
                     start_str = values[2]
                     start = int(float(values[2])*100)
 
-                    speaker_id = frames[start][2].replace('_', ' ').title()
+                    # Skip words if we don't have the seg for it
+                    if(start < first_frame):
+                        continue
+
+                    if(start in frames):
+                        speaker_id = frames[start][2].replace('_', ' ').title()
+                    else:
+                        speaker_id = None
+
                     speaker_score = None
                     if(speaker_id in scores):
                         speaker_score = float(scores[speaker_id])
@@ -184,7 +206,11 @@ def seg_ctm_to_json(seg_file, ctm_file, out_file = None, ne_file = None, stm_fil
 
                     sentence.append(json_word)
                     previous_speaker = speaker_id
-                    previous_gender = frames[start][0]
+                    if(start in frames):
+                        previous_gender = frames[start][0]
+                    else:
+                        previous_gender = None
+
                     previous_score = speaker_score
 
                 # Add the last sentence and last speaker turn
