@@ -14,7 +14,7 @@ def make_seg_to_seg_phone(in_seg_file, out_seg_file):
         f.write(data_sub)  
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Force seg file to phone')
+    parser = argparse.ArgumentParser(description='Force seg file to phone overwriting canal type with T')
 
     parser.add_argument("in_seg_file", help="the input seg file.")
     parser.add_argument("out_seg_file", help="the output seg file.")

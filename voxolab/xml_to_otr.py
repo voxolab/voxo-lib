@@ -8,11 +8,11 @@ import xml.etree.ElementTree as etree
 #
 import sys, codecs, argparse, json, re
 
-def xml_to_json(xml_file, destination):
-    """Convert an xml file (v1 or v2) to a json file for web demo
+def xml_to_otr(xml_file, destination):
+    """Convert an xml file (v1 or v2) to a json file in the oTranscribe format
 
     :xml_file: the path of the input xml file
-    :destination: the path of the output xml file
+    :destination: the path of the output otr file
     :returns: side effect 4ever
 
     """
@@ -45,7 +45,13 @@ def xml_to_json(xml_file, destination):
 
     try:
 
-        for sentence in root:
+        html = "";
+        for idx, sentence in enumerate(root):
+            if(idx != 0):
+                html += "</p>";
+
+            html += "<p>";
+
             speaker = sentence.attrib[spk_selector]
             words = []
 
@@ -61,34 +67,19 @@ def xml_to_json(xml_file, destination):
                 speaker_sentences = []
 
             for word in sentence:
-                json_word = {
-                    "start": word.attrib['start'],
-                    "word": word.attrib[word_selector],
-                    # No named entity support for now
-                    "ne": None
-                }
-                words.append(json_word)
-
-            speaker_sentences.append(words)
+                html += "<span class=\"word\" data-start=\"{}\">{} </span>".format(word.attrib['start'], word.attrib[word_selector])
 
             previous_speaker = speaker
             previous_gender = sentence.attrib[gender_selector]
 
 
-        # Add the last sentence and last speaker turn
-        speaker_turns.append({
-            "id":previous_speaker,
-            "gender":previous_gender,
-            # No speaker id score for now in xml
-            "score": None,
-            "sentences":speaker_sentences
-        })
-
-
-        #import pprint; pprint.pprint(speaker_turns)
+        html += "</p>"
+        #import pprint; pprint.pprint(html)
+        print(html)
 
         json_output = {}
-        json_output['speaker_turns'] = speaker_turns
+        json_output['text'] = html
+        json_output['media_source'] = ""
         print(json.dumps(json_output), file=output)
 
 
@@ -98,11 +89,11 @@ def xml_to_json(xml_file, destination):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create a json file based on an xml.')
+    parser = argparse.ArgumentParser(description='Create a json file in the oTranscribe format (.otr) based on an xml.')
 
     parser.add_argument("xml_file", help="the xml input file containing the transcription.")
     parser.add_argument("--output_file", help="the file you want to write too.")
 
     args = parser.parse_args()
 
-    xml_to_json(args.xml_file, args.output_file)
+    xml_to_otr(args.xml_file, args.output_file)
