@@ -46,8 +46,8 @@ def xml_to_otr(xml_file, destination):
     try:
 
         html = "";
-        for idx, sentence in enumerate(root):
-            if(idx != 0):
+        for i, sentence in enumerate(root):
+            if(i != 0):
                 html += "</p>";
 
             html += "<p>";
@@ -66,8 +66,15 @@ def xml_to_otr(xml_file, destination):
                 })
                 speaker_sentences = []
 
-            for word in sentence:
-                html += "<span class=\"word\" data-start=\"{}\">{} </span>".format(word.attrib['start'], word.attrib[word_selector])
+            nb_words = len(sentence)
+            for j, word in enumerate(sentence):
+                value = word.attrib[word_selector]
+                space_after = " "
+                if(value.endswith("'") or \
+                   (j+1 < nb_words and sentence[j+1].attrib[word_selector].startswith('-'))):
+                    space_after=""
+
+                html += "<span class=\"word\" data-start=\"{start}\">{value}{space}</span>".format(start=word.attrib['start'], value=value, space=space_after)
 
             previous_speaker = speaker
             previous_gender = sentence.attrib[gender_selector]
