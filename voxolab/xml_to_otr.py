@@ -75,7 +75,6 @@ def xml_to_otr(xml_file, destination):
 
         html += "</p>"
         #import pprint; pprint.pprint(html)
-        print(html)
 
         json_output = {}
         json_output['text'] = html
