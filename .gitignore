@@ -8,3 +8,4 @@ env/
 *.xml*
 *.seg
 *.egg-info/
+*.stm
