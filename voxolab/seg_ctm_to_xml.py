@@ -185,7 +185,7 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
                     for sentence in sentences:
                         # another child with text
                         #<sentence end="32.61" speaker="S105" gender="Female" start="15.12" type="Studio">
-                        child_sentence = etree.Element('sentence', speaker=speaker, gender=gender, quality=quality)
+                        child_sentence = etree.Element('sentence', speaker=speaker, gender=gender, type=quality)
                         root.append(child_sentence)
                         for word in sentence:
                             child_word = etree.Element('word', length=word['length'], start=word['start'], value=word['word'], score=word['score'])
