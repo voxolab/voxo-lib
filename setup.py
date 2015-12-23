@@ -14,5 +14,6 @@ setup(
     data_files=[('bin', ['bin/convertirAlphaEnNombre.pl', 'bin/convertirNombreEnAlpha.pl'])],
     requires=[
         'pytest',
+        'lxml'
     ],
 )
