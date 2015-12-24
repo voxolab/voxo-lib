@@ -444,13 +444,17 @@ def seg_ctm_to_json(seg_ctm_path, destination, source_encoding='ISO-8859-1'):
     with open(destination, "w", encoding='utf-8') as output_f:
         output_f.write(json.dumps(transcriptions))
 
-def recase_ctm(source, destination, recasing_path, log_file=None, file_encoding='ISO8859-1'):
+def recase_ctm(source, destination, recasing_path, log_file=None, 
+        file_encoding='ISO8859-1'):
     """
     Add case to a ctm file
     """
 
-    #sox lcp_q_gov.wav -r16000 lcp_q_gov.sph
-    command = ['java', '-ea', '-cp', os.path.join(recasing_path, 'sphinx4.jar'), ('-Dfile.encoding=' + file_encoding), 'edu.cmu.sphinx.tools.batch.BatchMajuscule', os.path.join(recasing_path,'majuscule.config.xml'), source, destination]
+    command = ['java', '-ea', '-cp', os.path.join(recasing_path, 'sphinx4.jar'),
+            ('-Dfile.encoding=' + file_encoding), 
+            'edu.cmu.sphinx.tools.batch.BatchMajuscule', 
+            os.path.join(recasing_path,'majuscule.config.xml'), 
+            source, destination]
 
     return run_command(command, log_file, recasing_path)
 
