@@ -56,7 +56,7 @@ def align(timestamped_words, corrected_file, mwer_segmenter, ref_file, outfile):
 
     # Read the ref file and put one word per line too
     with open(corrected_file, "rt") as in_file:
-        data=in_file.read().replace('\n', '').replace('\'', '\' ').replace('.', '. ')
+        data=in_file.read().replace('\n', ' ').replace('\'', '\' ').replace('.', '. ')
         lines = data.split(' ')
         with open(hyp_file, "wt") as out_file:
             for line in lines:
