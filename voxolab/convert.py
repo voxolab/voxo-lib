@@ -101,6 +101,10 @@ def seconds_to_srt_format(seconds):
 
     return start_str
 
+def align_to_srt(source, destination=None, source_encoding='utf-8'):
+    entries = align_to_entries(source, source_encoding)
+    return write_subtitle(entries, destination, 'srt')
+
 def xml_to_txt(source, destination, source_encoding='utf-8'):
     entries = xml_to_entries(source, destination, source_encoding)
     return write_txt(entries, destination)
@@ -112,6 +116,44 @@ def xml_to_srt(source, destination, source_encoding='utf-8'):
 def xml_to_webvtt(source, destination, source_encoding='utf-8'):
     entries = xml_to_entries(source, destination, source_encoding)
     return write_subtitle(entries, destination, 'webvtt')
+
+def align_to_entries(source, source_encoding='utf-8'):
+
+    align_file = codecs.open(source, 'r', encoding = source_encoding)
+    entries=[]
+    should_cut = False
+    speaker_number=0
+    speaker_prefix='S'
+
+    try:
+        for line in align_file:
+            values = line.split()
+            start = float(values[1])
+            duration = float(values[2])
+            word = values[3]
+            speaker = "{}{}".format(speaker_prefix, speaker_number)
+
+            # Remove space after ', and attach the word on the previous line
+            if(len(entries) > 0):
+                last_word, last_time, last_gender, last_quality, last_speaker, last_score, last_should_cut = entries[-1]
+                if(last_word.endswith("'")):
+                    entries[-1]=(last_word + word, last_time, 'U', 'U', speaker, 0, last_should_cut)
+                    continue
+
+            # If we have a '—', it's a speaker change
+            # Don't add the word but increase speaker number
+            if word == '—':
+                if(len(entries) > 0):
+                    speaker_number = speaker_number + 1
+            else:
+                entries.append((word, float(start), 'U', 'U', speaker, 0, should_cut))
+
+            should_cut = False
+
+    finally:
+        align_file.close()
+
+    return entries
 
 def xml_to_entries(source, destination = None, source_encoding='utf-8'):
 
@@ -329,7 +371,7 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
     previous_speaker=None
     srt_content=''
     max_subtitle_size=36
-    display_speakers=True
+    display_speakers=False
     line_number=0
     nb_chars=0
     next_word= next_time= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
@@ -381,7 +423,7 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
         next_size = nb_chars + len(next_word)
 
         # Split the subtitle every 5 line
-        if(next_size > 36):
+        if(next_size > 34):
             if(line_number == 0):
                 words.append('\n')
                 line_number = 1
