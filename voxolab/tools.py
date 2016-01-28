@@ -24,8 +24,8 @@ def create_dir_if_not_exist(path):
 def override_symlink(source, dest):
     try:
         os.remove(dest)
-    except OSError:
-        pass
+    except OSError as err:
+        logger.info("Symlink error {err}.".format(err=err))
 
     os.symlink(source, dest)
 
