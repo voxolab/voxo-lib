@@ -167,7 +167,6 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
 
                 json_output = {}
 
-                #print(json.dumps(json_output), file=output)
                 root = etree.Element('show', name=show)
 
                 for turn in speaker_turns:
@@ -197,7 +196,7 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
         "http://docs.voxolab.com/voxolab-xmlv2.dtd">
 """
                 s += etree.tostring(root, pretty_print=True, encoding='unicode')
-                print(s)
+                print(s, file=output)
 
             finally:
                 if output is not sys.stdout:
