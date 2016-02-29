@@ -8,7 +8,7 @@ import xml.etree.ElementTree as etree
 #
 import sys, codecs, argparse, json, re
 
-def xml_to_otr(xml_file, destination):
+def xml_to_otr(xml_file, destination, speakers=False):
     """Convert an xml file (v1 or v2) to a json file in the oTranscribe format
 
     :xml_file: the path of the input xml file
@@ -45,6 +45,8 @@ def xml_to_otr(xml_file, destination):
 
     try:
 
+        json_output = {}
+
         html = "";
         for i, sentence in enumerate(root):
             if(i != 0):
@@ -55,16 +57,14 @@ def xml_to_otr(xml_file, destination):
             speaker = sentence.attrib[spk_selector]
             words = []
 
-            # Speaker change
-            if(previous_speaker is not None and speaker != previous_speaker):
-                speaker_turns.append({
-                    "id":previous_speaker,
-                    "gender":previous_gender,
-                    # No speaker id score for now in xml
-                    "score": None,
-                    "sentences":speaker_sentences
-                })
-                speaker_sentences = []
+            if speakers:
+                # Speaker change
+                if(speaker != previous_speaker):
+                    html += "<p><strong>Locuteur {} :</strong>".format(speaker);
+                else:
+                    html += "<p>";
+            else:
+                html += "<p>";
 
             nb_words = len(sentence)
             for j, word in enumerate(sentence):
@@ -83,7 +83,6 @@ def xml_to_otr(xml_file, destination):
         html += "</p>"
         #import pprint; pprint.pprint(html)
 
-        json_output = {}
         json_output['text'] = html
         json_output['media_source'] = ""
         print(json.dumps(json_output), file=output)
@@ -99,7 +98,8 @@ if __name__ == '__main__':
 
     parser.add_argument("xml_file", help="the xml input file containing the transcription.")
     parser.add_argument("--output_file", help="the file you want to write too.")
+    parser.add_argument('--speakers', dest='speakers', action='store_true')
 
     args = parser.parse_args()
 
-    xml_to_otr(args.xml_file, args.output_file)
+    xml_to_otr(args.xml_file, args.output_file, args.speakers)
