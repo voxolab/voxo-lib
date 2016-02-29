@@ -60,7 +60,7 @@ def xml_to_otr(xml_file, destination, speakers=False):
             if speakers:
                 # Speaker change
                 if(speaker != previous_speaker):
-                    html += "<p><strong>Locuteur {} :</strong>".format(speaker);
+                    html += "<p><strong>Locuteur {} :</strong> ".format(speaker);
                 else:
                     html += "<p>";
             else:
