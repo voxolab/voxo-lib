@@ -5,6 +5,7 @@ filename = sys.argv[1]
 
 in_bigram = False
 in_trigram = False
+in_quadrigram = False
 
 bigrams_without_bow = {}
 bigrams_to_fix = {}
@@ -21,6 +22,11 @@ with open(filename, 'r') as arpa_file:
         if(entry == "\\3-grams:"):
             in_bigram = False
             in_trigram = True
+
+        if(entry == "\\4-grams:"):
+            in_bigram = False
+            in_trigram = False
+            in_quadrigram = True
 
         if in_bigram:
             entries = entry.split()
@@ -40,6 +46,7 @@ with open(filename, 'r') as arpa_file:
 
 in_bigram = False
 in_trigram = False
+in_quadrigram = False
 
 with open(filename, 'r') as arpa_file:
     for line in arpa_file:
@@ -51,6 +58,11 @@ with open(filename, 'r') as arpa_file:
         if(entry == "\\3-grams:"):
             in_bigram = False
             in_trigram = True
+
+        if(entry == "\\4-grams:"):
+            in_bigram = False
+            in_trigram = False
+            in_quadrigram = True
 
         if(in_bigram):
             entries = entry.split()
