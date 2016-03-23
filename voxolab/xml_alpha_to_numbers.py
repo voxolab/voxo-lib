@@ -124,6 +124,16 @@ def xml_alpha_to_numbers_from_file(xml_file, alpha_to_number_script, number_to_a
     with open(xml_file, "r", encoding=source_encoding) as f:
         xml_string = f.read()
         root = etree.fromstring(xml_string)  
+
+        if(len(root.findall(".//word[@value]")) > 0):
+            version = 'v2'
+            encoding = 'utf-8'
+        elif(len(root.findall(".//word[@sel]")) > 0):
+            version = 'v1'
+            encoding = 'iso-8859-1'
+        else:
+            raise Exception("Unknown XML format")
+
         xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script)
 
         xml_string = etree.tostring(root)
@@ -134,14 +144,14 @@ def xml_alpha_to_numbers_from_file(xml_file, alpha_to_number_script, number_to_a
         output = codecs.open(destination, 'w', encoding = output_encoding) if destination else sys.stdout
 
         try:
-            pretty_xml = pretty_xml.replace('<?xml version="1.0"', '<?xml version="1.0" encoding="ISO-8859-1"')
+            pretty_xml = pretty_xml.replace('<?xml version="1.0"', '<?xml version="1.0" encoding="{}"'.format(encoding))
             print(pretty_xml, file=output)
         finally:
             if output is not sys.stdout:
                 output.close()
 
 
-def check_special_cases(word, sentence, j, nb_words):
+def check_special_cases(word, sentence, j, nb_words, word_selector):
     """TODO: Preprocess values to handle special cases like
     "cinquante et un" => "cinquante-et-un", 
     "soixante et onze" => "soixante-et-onze".
@@ -154,7 +164,7 @@ def check_special_cases(word, sentence, j, nb_words):
 
     """
 
-    w = word.attrib['sel']
+    w = word.attrib[word_selector].lower()
 
     # The current word may be a special case with "et"
     # cinquante et un (51), soixante et onze (71), …
@@ -162,13 +172,13 @@ def check_special_cases(word, sentence, j, nb_words):
     modified = False
     if(w in ten_with_and and \
             nb_words > j + 2):
-        next_word = sentence[j+1].attrib['sel']
-        next_next_word = sentence[j+2].attrib['sel']
+        next_word = sentence[j+1].attrib[word_selector].lower()
+        next_next_word = sentence[j+2].attrib[word_selector].lower()
 
         # Change "cinquante et un" to "cinquante-et-un"
         if(next_word == 'et' and next_next_word in ['un', 'onze']):
             new_value = "{}-{}-{}".format(w, next_word, next_next_word)
-            word.set('sel', new_value)
+            word.set(word_selector, new_value)
             sentence.remove(sentence[j+1])
             sentence.remove(sentence[j+1])
             modified = True
@@ -223,6 +233,22 @@ def is_well_formed_number(word, alpha_to_number_script, number_to_alpha_script):
 def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
 
 
+    # Check xml version and force encoding for compatibility purpose
+    if(len(root.findall(".//word[@value]")) > 0):
+        version = 'v2'
+        encoding = 'utf-8'
+        word_selector = 'value'
+        spk_selector = 'speaker'
+        gender_selector = 'gender'
+    elif(len(root.findall(".//word[@sel]")) > 0):
+        version = 'v1'
+        encoding = 'iso-8859-1'
+        word_selector = 'sel'
+        spk_selector = 'locuteur'
+        gender_selector = 'sexe'
+    else:
+        raise Exception("Unknown XML format")
+
     while(True):
 
         modified = False
@@ -234,14 +260,14 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                 word.set('length', "{:.2f}".format(float(word.attrib['length'])))
 
                 # Recompute the number of words if we have modified the sentence
-                if(check_special_cases(word, sentence, j, nb_words)):
+                if(check_special_cases(word, sentence, j, nb_words, word_selector)):
                     nb_words = len(sentence)
 
                 # If the current word is a number, let's try to get
                 # the next words and see if we can construct a number
                 # from it
 
-                w = word.attrib['sel']
+                w = word.attrib[word_selector].lower()
                 idx = j
 
                 number_found = False
@@ -252,7 +278,7 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                     number_found = True
                     while(in_number):
                         if(idx+1 < nb_words):
-                            next_word = sentence[idx+1].attrib['sel']
+                            next_word = sentence[idx+1].attrib[word_selector].lower()
                             if(is_number(w + "-" + next_word)):
                                 w = w + "-" + next_word
                                 #print("{} is still a number".format(w))
@@ -271,7 +297,7 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
 
                     last_word = sentence[idx]
                     last_word_end = float(last_word.attrib['start']) + float(last_word.attrib['length'])
-                    word.set('sel', convert_alpha_to_number(w, alpha_to_number_script, 'iso-8859-1'))
+                    word.set(word_selector, convert_alpha_to_number(w, alpha_to_number_script, 'iso-8859-1'))
                     word.set('length', "{:.2f}".format(last_word_end - float(word.attrib['start'])))
                     # Delete the next words we want to merge with the current one
                     for k in range(j+1, idx+1):
