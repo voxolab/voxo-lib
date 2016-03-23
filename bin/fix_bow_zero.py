@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# coding: utf8
 import sys
 
 filename = sys.argv[1]
@@ -12,7 +13,7 @@ bigrams_to_fix = {}
 
 
 # First pass to get the bigrams that need to be fixed
-with open(filename, 'r') as arpa_file:
+with open(filename, 'r', encoding='utf-8') as arpa_file:
     for line in arpa_file:
         entry = line.rstrip()
 
@@ -48,7 +49,7 @@ in_bigram = False
 in_trigram = False
 in_quadrigram = False
 
-with open(filename, 'r') as arpa_file:
+with open(filename, 'r', encoding='utf-8') as arpa_file:
     for line in arpa_file:
         entry = line.rstrip()
 
