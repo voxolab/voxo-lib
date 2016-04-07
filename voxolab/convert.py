@@ -66,7 +66,16 @@ def get_duration(source, seconds = False):
     command = ['ffmpeg', "-i", source]
     cmd = subprocess.Popen(command, stderr=subprocess.PIPE)
     infos, err = cmd.communicate()
-    output = err.decode("utf-8")
+    output = err
+
+    try:
+        output = err.decode("utf-8")
+    except UnicodeDecodeError as e:
+        # If we can't decode as utf-8, try with windows-1252
+        # it should handle the .mov files encoding the codec
+        # description in Windows-1252…
+        output = err.decode("Windows-1252")
+
     match = re.match(r'.*Duration: (\S*), .*', output, re.DOTALL)
 
     duration = "00:00:00.00"
