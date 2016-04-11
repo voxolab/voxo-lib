@@ -172,24 +172,22 @@ def xml_to_entries(source, destination = None, source_encoding='utf-8'):
     tree = etree.parse(source)
     root = tree.getroot()
     entries=[]
-    should_cut = False
+    new_sentence = True
     for sentence in root:
         sa = sentence.attrib
+        new_sentence = True
         for word in sentence:
             wa = word.attrib
 
             # Remove space after ', and attach the word on the previous line
-            if(len(entries) > 0):
-                last_word, last_time, last_gender, last_quality, last_speaker, last_score, last_should_cut = entries[-1]
-                if(last_word.endswith("'")):
-                    entries[-1]=(last_word + wa['value'], last_time, sa['gender'], sa['type'], sa['speaker'], wa['score'], last_should_cut)
+            if(len(entries) > 0 and new_sentence == False):
+                last_word, last_time, last_length, last_gender, last_quality, last_speaker, last_score, last_new_sentence = entries[-1]
+                if(last_word.endswith("'") or wa['value'].startswith("'")):
+                    entries[-1]=(last_word + wa['value'], last_time, last_length, sa['gender'], sa['type'], sa['speaker'], wa['score'], last_new_sentence)
                     continue
 
-            entries.append((wa['value'], float(wa['start']), sa['gender'], sa['type'], sa['speaker'], wa['score'], should_cut))
-            should_cut = False
-
-        should_cut = True
-
+            entries.append((wa['value'], float(wa['start']), float(wa['length']), sa['gender'], sa['type'], sa['speaker'], wa['score'], new_sentence))
+            new_sentence = False
 
     return entries
 
@@ -283,7 +281,7 @@ def write_txt(entries, destination = None):
     """Generic function to write a txt output based on data generated 
     before (by reading a ctm, seg, xml, whatever)
 
-    :entries: list of tuples (word, time, gender, quality, speaker, should_cut)
+    :entries: list of tuples (word, time, length, gender, quality, speaker, new_sentence)
     :destination: the destination file
     :returns: nothing, write to the destination file
 
@@ -301,25 +299,25 @@ def write_txt(entries, destination = None):
     previous_speaker=None
     display_speakers=True
     nb_chars=0
-    next_word= next_time= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
+    next_word= next_time= next_length= next_gender= next_quality= next_speaker= next_score= next_new_sentence = ""
     content = ''
 
     for i, entry in enumerate(entries):
-        (word, time, gender, quality, speaker, score, should_cut) = entry
+        (word, time, length, gender, quality, speaker, score, new_sentence) = entry
 
         if(i!=nb_entries -1):
-            (next_word, next_time, next_gender, next_quality, next_speaker, next_score, next_should_cut) = entries[i+1]
-
-        # Should I create a new line
-
-        #print(should_cut)
-        if(should_cut or (speaker != previous_speaker and previous_speaker is not None)):
-            content = content + "\n\n"
+            (next_word, next_time, next_length, next_gender, next_quality, next_speaker, next_score, next_new_sentence) = entries[i+1]
 
         if(float(score) < 0.5):
             content += '(' + word + '?) '
         else:
             content += word + ' '
+	    
+        # Should I create a new line
+        #print(new_sentence)
+        if(next_new_sentence or (speaker != previous_speaker and previous_speaker is not None)):
+            content = content + "\n\n"
+	    
         # Keep trace of the previous speaker
         previous_speaker = speaker
 
@@ -334,7 +332,7 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
     """Generic function to write a subtitle file (srt, webvtt) based on
     data that was generated before (by reading a ctm, seg, xml, whatever)
 
-    :entries: list of tuples (word, time, gender, quality, speaker, should_cut)
+    :entries: list of tuples (word, time, length, gender, quality, speaker, should_cut)
     :destination: the destination file
     :sub_format: the format to write to, srt or webvtt
     :returns: nothing, write to the destination file
@@ -373,46 +371,24 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
     # Init some defaults
     nb_entries = len(entries)
     words=[]
-    start_time=0
-    current_time=0
+    start_time=-1
     srt_number=0
-    new_subtitle=False
     previous_speaker=None
     srt_content=''
     max_subtitle_size=36
     display_speakers=False
     line_number=0
     nb_chars=0
-    next_word= next_time= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
+    next_word= next_time= next_length= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
     
     if(sub_format=='webvtt'):
         print('WEBVTT\n', file=output)
 
     for i, entry in enumerate(entries):
-        (word, time, gender, quality, speaker, score, should_cut) = entry
+        (word, time, length, gender, quality, speaker, score, new_sentence) = entry
 
-        if(i!=nb_entries -1):
-            (next_word, next_time, next_gender, next_quality, next_speaker, next_score, next_should_cut) = entries[i+1]
-
-        if(i == 0):
+        if(start_time == -1):
             start_time = time
-
-        # Should I create a new subtitle entry?
-        if(new_subtitle):
-
-            time = time-0.2
-            display_subtitle_line(start_time, time, sub_format, srt_number, words, output)
-
-            # Reset start time
-            start_time=time
-            # Reset the new_subtitle flag
-            new_subtitle = False
-            # Reset the next words to display
-            words=[]
-            # Reset the line number
-            line_number = 0
-            # Reset the char counter
-            nb_chars = 0
 
         # Append the words
 
@@ -429,29 +405,45 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
         # +1 because we will add a space to the word
         nb_chars += len(word) + 1
 
-        next_size = nb_chars + len(next_word)
+        if(i!=nb_entries -1):
+            (next_word, next_time, next_length, next_gender, next_quality, next_speaker, next_score, next_new_sentence) = entries[i+1]
 
-        # Split the subtitle every 5 line
-        if(next_size > 34):
-            if(line_number == 0):
-                words.append('\n')
-                line_number = 1
-            else:
-                line_number = 2
-            nb_chars = 0
+            next_size = nb_chars + len(next_word)
 
-        # Conditions to create a new subtitle entry
-        if(line_number == 2 or (next_speaker != speaker)):
-            srt_number+=1
-            new_subtitle=True
+            # Split the subtitle every 2 lines
+            if(next_size > 34):
+                if(line_number == 0):
+                    words.append('\n')
+                    line_number = 1
+                else:
+                    line_number = 2
+                nb_chars = 0
 
-        # Keep trace of the previous speaker
-        previous_speaker = speaker
+            # Should I create a new subtitle entry?
+            if(line_number == 2 or (next_speaker != speaker) or next_new_sentence or (next_time - time - length) > 1.4):
+                srt_number+=1
+                if (next_time > time + length):
+                    end_time = time + length
+                else:
+                    end_time = next_time - 0.02
+                display_subtitle_line(start_time, end_time, sub_format, srt_number, words, output)
+
+                # Reset start time
+                start_time=-1
+                # Reset the next words to display
+                words=[]
+                # Reset the line number
+                line_number = 0
+                # Reset the char counter
+                nb_chars = 0
+
+            # Keep trace of the previous speaker
+            previous_speaker = speaker
 
 
     # Last line
     if(len(words) > 0):
-        display_subtitle_line(start_time, time, sub_format, srt_number + 1, words, output)
+        display_subtitle_line(start_time, time + length, sub_format, srt_number + 1, words, output)
 
     if output is not sys.stdout:
         output.close()
