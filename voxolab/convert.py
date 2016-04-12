@@ -296,7 +296,6 @@ def write_txt(entries, destination = None):
     start_time=0
     current_time=0
     new_line=False
-    previous_speaker=None
     display_speakers=True
     nb_chars=0
     next_word= next_time= next_length= next_gender= next_quality= next_speaker= next_score= next_new_sentence = ""
@@ -305,9 +304,6 @@ def write_txt(entries, destination = None):
     for i, entry in enumerate(entries):
         (word, time, length, gender, quality, speaker, score, new_sentence) = entry
 
-        if(i!=nb_entries -1):
-            (next_word, next_time, next_length, next_gender, next_quality, next_speaker, next_score, next_new_sentence) = entries[i+1]
-
         if(float(score) < 0.5):
             content += '(' + word + '?) '
         else:
@@ -315,12 +311,11 @@ def write_txt(entries, destination = None):
 	    
         # Should I create a new line
         #print(new_sentence)
-        if(next_new_sentence or (speaker != previous_speaker and previous_speaker is not None)):
-            content = content + "\n\n"
+        if(i!=nb_entries -1):
+            (next_word, next_time, next_length, next_gender, next_quality, next_speaker, next_score, next_new_sentence) = entries[i+1]
+            if(next_new_sentence or (speaker != next_speaker)):
+                content = content + "\n\n"
 	    
-        # Keep trace of the previous speaker
-        previous_speaker = speaker
-
 
     print(content, file=output)
 
@@ -332,7 +327,7 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
     """Generic function to write a subtitle file (srt, webvtt) based on
     data that was generated before (by reading a ctm, seg, xml, whatever)
 
-    :entries: list of tuples (word, time, length, gender, quality, speaker, should_cut)
+    :entries: list of tuples (word, time, length, gender, quality, speaker, new_sentence)
     :destination: the destination file
     :sub_format: the format to write to, srt or webvtt
     :returns: nothing, write to the destination file
@@ -379,7 +374,7 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
     display_speakers=False
     line_number=0
     nb_chars=0
-    next_word= next_time= next_length= next_gender= next_quality= next_speaker= next_score= next_should_cut = ""
+    next_word= next_time= next_length= next_gender= next_quality= next_speaker= next_score= next_new_sentence = ""
     
     if(sub_format=='webvtt'):
         print('WEBVTT\n', file=output)
