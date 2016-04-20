@@ -415,12 +415,13 @@ def write_subtitle(entries, destination = None, sub_format='srt'):
                 nb_chars = 0
 
             # Should I create a new subtitle entry?
-            if(line_number == 2 or (next_speaker != speaker) or next_new_sentence or (next_time - time - length) > 1.4):
-                srt_number+=1
-                if (next_time > time + length):
-                    end_time = time + length
-                else:
+            if(line_number == 2 or (next_speaker != speaker) or (next_time - time - length) > 1.4 or (next_new_sentence and len(words) > 2 and next_time - time - length > 0.2)):
+                end_time = time + length
+                if (end_time - start_time < 0.8): # ensure a minimum display time
+                    end_time = start_time + 0.8
+                if (end_time > next_time - 0.02): # ensure subtitles don't overlap
                     end_time = next_time - 0.02
+                srt_number+=1
                 display_subtitle_line(start_time, end_time, sub_format, srt_number, words, output)
 
                 # Reset start time
