@@ -1,9 +1,13 @@
 import pytest
 import os
+import sys
+
+myPath = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, myPath + '/../')
 
 @pytest.fixture
 def full_xml_root(full_xml_string):
-    import xml.etree.ElementTree as etree    
+    from lxml import etree
     root = etree.fromstring(full_xml_string)  
     return root
 
@@ -16,8 +20,59 @@ def number_to_alpha_script():
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'bin', 'convertirNombreEnAlpha.pl')
 
 @pytest.fixture
+def full_xml_v2_root(full_xml_v2_string):
+    from lxml import etree
+    root = etree.fromstring(full_xml_v2_string)  
+    return root
+
+@pytest.fixture
+def full_xml_v2_string():
+    return """
+<show name="demo_1_dc79942a_c6ee_4d24_bfd8_b6f61344987c">
+  <sentence gender="Female" speaker="S0" type="Studio">
+    <word length="0.35" score="1.00" start="0.63" value="zéro"/>
+    <word length="0.35" score="0.96" start="0.98" value="deux"/>
+    <word length="0.36" score="1.00" start="1.68" value="quatre"/>
+    <word length="0.18" score="1.00" start="2.04" value="vingt"/>
+    <word length="0.61" score="1.00" start="2.22" value="seize"/>
+    <word length="0.49" score="1.00" start="3.12" value="quarante"/>
+    <word length="0.47" score="1.00" start="3.61" value="huit"/>
+    <word length="0.52" score="1.00" start="4.47" value="cinquante"/>
+    <word length="0.16" score="1.00" start="4.99" value="et"/>
+    <word length="0.23" score="1.00" start="5.15" value="un"/>
+    <word length="0.42" score="1.00" start="5.87" value="zéro"/>
+    <word length="0.66" score="1.00" start="6.29" value="six"/>
+    <word length="0.50" score="0.99" start="8.63" value="zéro"/>
+    <word length="0.21" score="0.96" start="9.13" value="un"/>
+    <word length="0.61" score="1.00" start="9.75" value="cinquante"/>
+  </sentence>
+  <sentence gender="Female" speaker="S0" type="Studio">
+    <word length="0.59" score="1.00" start="10.36" value="et"/>
+    <word length="0.59" score="1.00" start="10.36" value="un"/>
+    <word length="0.41" score="1.00" start="11.19" value="trente"/>
+    <word length="0.50" score="1.00" start="11.60" value="huit"/>
+    <word length="0.22" score="1.00" start="12.51" value="dix"/>
+    <word length="0.53" score="1.00" start="12.73" value="sept"/>
+    <word length="0.44" score="1.00" start="13.65" value="trente"/>
+    <word length="0.34" score="0.99" start="14.09" value="deux"/>
+    <word length="0.38" score="1.00" start="15.81" value="zéro"/>
+    <word length="0.57" score="1.00" start="16.19" value="neuf"/>
+    <word length="0.67" score="1.00" start="17.03" value="soixante"/>
+    <word length="0.48" score="1.00" start="17.70" value="douze"/>
+    <word length="0.33" score="1.00" start="18.53" value="trente"/>
+    <word length="0.58" score="1.00" start="18.86" value="sept"/>
+    <word length="0.31" score="1.00" start="19.62" value="quatre"/>
+    <word length="0.15" score="0.99" start="19.93" value="vingt"/>
+    <word length="0.16" score="1.00" start="20.08" value="dix"/>
+    <word length="0.53" score="1.00" start="20.24" value="sept"/>
+    <word length="0.53" score="1.00" start="20.87" value="cinquante"/>
+    <word length="0.46" score="1.00" start="21.40" value="trois"/>
+  </sentence>
+</show>"""
+
+@pytest.fixture
 def full_xml_string():
-    return """<?xml version='1.0' encoding='ISO-8859-1'?>
+    return """
 <show name="test">
     <sentence start="0.00" end="19.02" locuteur="S0" type="Tel" sexe="Female">
         <word sel="bonjour" start="0.11" length="0.31" scoreConfiance="1.00">

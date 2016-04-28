@@ -7,7 +7,7 @@ import os
 import subprocess
 import sys
 
-import xml.etree.ElementTree as etree
+from lxml import etree
 from xml.dom import minidom
 
 number_to_alpha = {
@@ -179,13 +179,13 @@ def xml_alpha_to_numbers_from_file(
                 output.close()
 
 
-def check_special_cases(word, sentence, j, nb_words, word_selector):
-    """TODO: Preprocess values to handle special cases like
+def check_special_cases(word, words, xml_root, j, nb_words, word_selector):
+    """Preprocess values to handle special cases like
     "cinquante et un" => "cinquante-et-un",
     "soixante et onze" => "soixante-et-onze".
 
     :word: The xml object representing a word
-    :sentence: The xml object representing a sentence
+    :words: The xml object representing the words
     :j: the current word index in the sentence
     :nb_words: total of words in the sentence
     :returns: True if we have modified the sentence
@@ -199,27 +199,24 @@ def check_special_cases(word, sentence, j, nb_words, word_selector):
 
     modified = False
     if(w in ten_with_and and nb_words > j + 2):
-        next_word = sentence[j+1].attrib[word_selector].lower()
-        next_next_word = sentence[j+2].attrib[word_selector].lower()
+        next_word = words[j+1].attrib[word_selector].lower()
+        next_next_word = words[j+2].attrib[word_selector].lower()
 
         # Change "cinquante et un" to "cinquante-et-un"
         if(next_word == 'et' and next_next_word in ['un', 'onze']):
             new_value = "{}-{}-{}".format(w, next_word, next_next_word)
             word.set(word_selector, new_value)
-            sentence.remove(sentence[j+1])
-            sentence.remove(sentence[j+1])
+            words[j+1].getparent().remove(words[j+1])
+            words[j+2].getparent().remove(words[j+2])
             modified = True
 
     return modified
 
 
 def is_number(word):
-    """TODO: Check if the current word is well-formed number
+    """Check if the current word is well-formed number
 
     :word: The xml object representing a word
-    :sentence: The xml object representing a sentence
-    :j: the current word index in the sentence
-    :nb_words: total of words in the sentence
     :returns: Boolean
 
     """
@@ -241,7 +238,7 @@ def is_number(word):
 def is_well_formed_number(
         word, alpha_to_number_script, number_to_alpha_script):
 
-    """TODO: Check if the alpha number is a well formed
+    """Check if the alpha number is a well formed
     one by converting both ways.
 
     :word: The word to check (alpha number)
@@ -281,75 +278,77 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
     else:
         raise Exception("Unknown XML format")
 
+
+    words = root.findall(".//word")
     while(True):
 
         modified = False
 
-        for i, sentence in enumerate(root):
-            nb_words = len(sentence)
-            for j, word in enumerate(sentence):
+        nb_words = len(words)
+        for j, word in enumerate(words):
 
-                word.set(
-                    'length',
-                    "{:.2f}".format(float(word.attrib['length'])))
+            word.set(
+                'length',
+                "{:.2f}".format(float(word.attrib['length'])))
 
-                # Recompute the number of words if we have
-                # modified the sentence
-                if(check_special_cases(
-                        word, sentence, j, nb_words, word_selector)):
-                    nb_words = len(sentence)
+            # Recompute the number of words if we have
+            # modified the sentence
+            if(check_special_cases(
+                    word, words, root, j, nb_words, word_selector)):
+                nb_words = len(words)
 
-                # If the current word is a number, let's try to get
-                # the next words and see if we can construct a number
-                # from it
+            # If the current word is a number, let's try to get
+            # the next words and see if we can construct a number
+            # from it
 
-                w = word.attrib[word_selector].lower()
-                idx = j
+            w = word.attrib[word_selector].lower()
+            idx = j
 
-                number_found = False
+            number_found = False
 
-                if(is_number(w)):
-                    in_number = True
-                    number_found = True
-                    while(in_number):
-                        if(idx+1 < nb_words):
-                            next_word = \
-                                sentence[idx+1].attrib[word_selector].lower()
-                            if(is_number(w + "-" + next_word)):
-                                w = w + "-" + next_word
-                                idx = idx + 1
-                            else:
-                                in_number = False
+            if(is_number(w)):
+                in_number = True
+                number_found = True
+                while(in_number):
+                    if(idx+1 < nb_words):
+                        next_word = \
+                            words[idx+1].attrib[word_selector].lower()
+                        if(is_number(w + "-" + next_word)):
+                            w = w + "-" + next_word
+                            idx = idx + 1
                         else:
                             in_number = False
+                    else:
+                        in_number = False
 
-                # It's seems we found a valid number to transform
-                if((number_found or w in alpha_to_number) and
-                    w not in stop_list and
-                    is_well_formed_number(
-                        w, alpha_to_number_script, number_to_alpha_script)):
+            # It's seems we found a valid number to transform
+            if((number_found or w in alpha_to_number) and
+                w not in stop_list and
+                is_well_formed_number(
+                    w, alpha_to_number_script, number_to_alpha_script)):
 
-                    last_word = sentence[idx]
-                    last_word_end = float(last_word.attrib['start']) + \
-                        float(last_word.attrib['length'])
+                last_word = words[idx]
+                last_word_end = float(last_word.attrib['start']) + \
+                    float(last_word.attrib['length'])
 
-                    word.set(
-                        word_selector,
-                        convert_alpha_to_number(
-                            w, alpha_to_number_script, 'iso-8859-1'))
-                    word.set(
-                        'length',
-                        "{:.2f}".format(
-                            last_word_end - float(word.attrib['start'])))
+                word.set(
+                    word_selector,
+                    convert_alpha_to_number(
+                        w, alpha_to_number_script, 'iso-8859-1'))
+                word.set(
+                    'length',
+                    "{:.2f}".format(
+                        last_word_end - float(word.attrib['start'])))
 
-                    # Delete the next words we want to merge with
-                    # the current one
-                    for k in range(j+1, idx+1):
-                        sentence.remove(sentence[j+1])
+                # Delete the next words we want to merge with
+                # the current one
+                for k in range(j+1, idx+1):
+                    if(words[k].getparent() is not None):
+                        words[k].getparent().remove(words[k])
 
-                    nb_words = len(sentence)
+                nb_words = len(words)
 
-                    modified = True
+                modified = True
 
         if(not modified):
             break
