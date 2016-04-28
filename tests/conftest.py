@@ -5,25 +5,38 @@ import sys
 myPath = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, myPath + '/../')
 
+
 @pytest.fixture
 def full_xml_root(full_xml_string):
     from lxml import etree
-    root = etree.fromstring(full_xml_string)  
+    root = etree.fromstring(full_xml_string)
     return root
+
 
 @pytest.fixture
 def alpha_to_number_script():
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'bin', 'convertirAlphaEnNombre.pl')
-    
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..',
+        'bin',
+        'convertirAlphaEnNombre.pl')
+
+
 @pytest.fixture
 def number_to_alpha_script():
-    return os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'bin', 'convertirNombreEnAlpha.pl')
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..',
+        'bin',
+        'convertirNombreEnAlpha.pl')
+
 
 @pytest.fixture
 def full_xml_v2_root(full_xml_v2_string):
     from lxml import etree
-    root = etree.fromstring(full_xml_v2_string)  
+    root = etree.fromstring(full_xml_v2_string)
     return root
+
 
 @pytest.fixture
 def full_xml_v2_string():
@@ -69,6 +82,7 @@ def full_xml_v2_string():
     <word length="0.46" score="1.00" start="21.40" value="trois"/>
   </sentence>
 </show>"""
+
 
 @pytest.fixture
 def full_xml_string():
