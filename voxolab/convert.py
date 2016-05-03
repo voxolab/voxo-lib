@@ -509,7 +509,7 @@ def xmlv1_to_v2(source, destination, log_file=None, input_encoding='ISO8859-1', 
         content = xmlv1.readlines()
 
         for line in content:
-            line = re.sub('ISO-8859-1', 'utf-8', line)
+            line = re.sub('ISO-8859-1', 'utf-8', line, flags=re.I)
             line = re.sub('locuteur=', 'speaker=', line)
             line = re.sub('sexe=', 'gender=', line)
             line = re.sub('scoreConfiance=', 'score=', line)
