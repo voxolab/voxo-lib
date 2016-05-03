@@ -4,6 +4,7 @@
 import argparse
 import codecs
 import os
+import re
 import subprocess
 import sys
 
@@ -141,6 +142,10 @@ def xml_alpha_to_numbers_from_file(
 
     with open(xml_file, "r", encoding=source_encoding) as f:
         xml_string = f.read()
+
+        # Remove bundled encoding
+        xml_string = re.sub(r"<\?xml[^>]*>", "", xml_string)
+
         root = etree.fromstring(xml_string)
 
         if(len(root.findall(".//word[@value]")) > 0):
