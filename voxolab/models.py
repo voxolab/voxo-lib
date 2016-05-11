@@ -45,6 +45,7 @@ class ProcessType:
     FullPhoneTranscription = 2
     TranscriptionAlignment = 3
     FullEnglishTranscription = 4
+    CustomModelTranscription = 5
 
     @staticmethod
     def to_dict():
@@ -53,5 +54,6 @@ class ProcessType:
             ProcessType.FullPhoneTranscription: 'Full phone transcription',
             ProcessType.TranscriptionAlignment: 'Transcription alignment',
             ProcessType.FullEnglishTranscription: 'Full english transcription'
+            ProcessType.CustomModelTranscription: 'Transcription with custom model'
             }
 
