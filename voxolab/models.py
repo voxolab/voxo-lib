@@ -53,7 +53,7 @@ class ProcessType:
             ProcessType.FullTranscription: 'Full transcription',
             ProcessType.FullPhoneTranscription: 'Full phone transcription',
             ProcessType.TranscriptionAlignment: 'Transcription alignment',
-            ProcessType.FullEnglishTranscription: 'Full english transcription'
+            ProcessType.FullEnglishTranscription: 'Full english transcription',
             ProcessType.CustomModelTranscription: 'Transcription with custom model'
             }
 
