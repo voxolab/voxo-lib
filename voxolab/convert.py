@@ -4,6 +4,27 @@ import xml.etree.ElementTree as etree
 
 logger = logging.getLogger(__name__)
 
+def ffmpeg(source, destination, rate = "16000", log_file = None):
+    """
+    Convert any media file that ffmpeg can
+    """
+
+    #ffmpeg -i $1  -vn -acodec pcm_s16le -ac 1 $2
+    command = ['ffmpeg', "-y", "-i", source, "-ar", rate, "-ac", "1", destination]
+
+    if(log_file is not None):
+        logger.info("Logging to " + log_file)
+
+        with open(log_file, "a") as output:
+            ffmpeg = subprocess.Popen(command, stdout=output, stderr=output)
+            ret_code = ffmpeg.wait()
+            output.flush()
+    else:
+        ffmpeg = subprocess.Popen(command)       
+        ret_code = ffmpeg.wait()
+
+    return ret_code
+
 def anything_to_wav(source, destination, rate = "16000", log_file = None):
     """
     Convert any media file that ffmpeg can read to a wav file.
