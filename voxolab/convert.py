@@ -4,13 +4,13 @@ import xml.etree.ElementTree as etree
 
 logger = logging.getLogger(__name__)
 
-def ffmpeg(source, destination, rate = "16000", log_file = None):
+def anything_to_wav(source, destination, rate = "16000", log_file = None):
     """
     Convert any media file that ffmpeg can read to a wav file.
     """
 
     #ffmpeg -i $1  -vn -acodec pcm_s16le -ac 1 $2
-    command = ['ffmpeg', "-y", "-i", source, "-ar", rate, destination]
+    command = ['ffmpeg', "-y", "-i", source, "-vn", "-acodec", "pcm_s16le", "-ar", rate, "-ac", "1", destination]
 
     if(log_file is not None):
         logger.info("Logging to " + log_file)
@@ -24,7 +24,6 @@ def ffmpeg(source, destination, rate = "16000", log_file = None):
         ret_code = ffmpeg.wait()
 
     return ret_code
-
 
 def video_to_mp4(source, destination):
     #Todo
