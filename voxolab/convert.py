@@ -157,17 +157,17 @@ def align_to_entries(source, source_encoding='utf-8'):
 
     try:
         for line in align_file:
-            values = line.split()
+            values = line.split(maxsplit=3)
             start = float(values[1])
             duration = float(values[2])
-            word = values[3]
+            word = values[3].strip()
             speaker = "{}{}".format(speaker_prefix, speaker_number)
 
             # Remove space after ', and attach the word on the previous line
             if(len(entries) > 0):
-                last_word, last_time, last_gender, last_quality, last_speaker, last_score, last_should_cut = entries[-1]
+                last_word, last_time, last_duration, last_gender, last_quality, last_speaker, last_score, last_should_cut = entries[-1]
                 if(last_word.endswith("'")):
-                    entries[-1]=(last_word + word, last_time, 'U', 'U', speaker, 0, last_should_cut)
+                    entries[-1]=(last_word + word, last_time, last_duration+duration, 'U', 'U', speaker, 0, last_should_cut)
                     continue
 
             # If we have a '—', it's a speaker change
@@ -176,7 +176,7 @@ def align_to_entries(source, source_encoding='utf-8'):
                 if(len(entries) > 0):
                     speaker_number = speaker_number + 1
             else:
-                entries.append((word, float(start), 'U', 'U', speaker, 0, should_cut))
+                entries.append((word, start, duration, 'U', 'U', speaker, 0, should_cut))
 
             should_cut = False
 
