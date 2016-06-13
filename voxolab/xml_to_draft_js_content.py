@@ -78,12 +78,13 @@ def xml_to_draft_js_content(xml_file, destination):
                     previous_word)
 
                 entity_start = len(block_text)
+                entity_length = len(word_text)
 
                 # Don't highlight spaces
                 if(word_text.startswith(' ')) :
                     entity_start = entity_start + 1
+                    entity_length = entity_length - 1
 
-                entity_length = len(word_text)
                 block_text = block_text + word_text
                 block_ranges.append({
                     'offset': entity_start,
