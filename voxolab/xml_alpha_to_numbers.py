@@ -95,7 +95,7 @@ alpha_to_number["neuvième"] = "9ème"
 ten_with_and = ['vingt', 'trente', 'quarante', 'cinquante', 'soixante']
 
 # Words you don't want to convert
-stop_list = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq',
+stop_list = ['un', 'deux', 'trois', 'quatre', 'cinq',
              'six', 'sept', 'huit', 'neuf']
 
 
@@ -261,6 +261,11 @@ def is_well_formed_number(
     to_alpha = convert_alpha_to_number(
         to_number, number_to_alpha_script, 'utf-8')
 
+    word = word.replace('cents', 'cent')
+    word = word.replace('milles', 'mille')
+    word = word.replace('millions', 'million')
+    word = word.replace('milliards', 'milliard')
+
     if(word == to_alpha):
         return True
     else:
@@ -331,6 +336,7 @@ def xml_alpha_to_numbers(root, alpha_to_number_script, number_to_alpha_script):
                 w not in stop_list and
                 is_well_formed_number(
                     w, alpha_to_number_script, number_to_alpha_script)):
+
 
                 last_word = words[idx]
                 last_word_end = float(last_word.attrib['start']) + \
