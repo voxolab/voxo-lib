@@ -374,10 +374,22 @@ if __name__ == '__main__':
                         help="path to the script used to convert numbers to"
                         " alphanumerics.")
 
+    parser.add_argument(
+        "--input_encoding",
+        help="the input encoding.",
+        default="utf-8")
+
+    parser.add_argument(
+        "--output_encoding",
+        help="the output encoding.",
+        default="utf-8")
+
     args = parser.parse_args()
 
     xml_alpha_to_numbers_from_file(
         args.xml_file,
         os.path.realpath(args.alpha_to_number_script),
         os.path.realpath(args.number_to_alpha_script),
-        args.xml_file_output)
+        args.xml_file_output,
+        source_encoding=args.input_encoding,
+        output_encoding=args.output_encoding)
