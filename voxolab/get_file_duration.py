@@ -8,7 +8,7 @@ from convert import get_duration
 def get_file_duration(filename):
     
     (duration, seconds)  = get_duration(filename)
-    print(seconds)
+    print("{} {}".format(seconds, duration))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
