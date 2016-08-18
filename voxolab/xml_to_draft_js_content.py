@@ -11,7 +11,7 @@ import argparse
 import codecs
 import json
 import sys
-
+import os
 
 def get_word_value(word, previous_word):
     if previous_word == "" \
@@ -22,7 +22,18 @@ def get_word_value(word, previous_word):
         return " " + word
 
 
-def xml_to_draft_js_content(xml_file, destination):
+def write_json(blocks, entity_map, output):
+    json_output = {}
+    json_output['blocks'] = blocks
+    json_output['entityMap'] = entity_map
+    print(json.dumps(json_output, indent=2, sort_keys=True), file=output)
+
+
+def get_json_filename(spk_turn, filename):
+    (base, ext) = os.path.splitext(filename)
+    return base + "." + str(spk_turn) + ext
+
+def xml_to_draft_js_content(xml_file, destination, one_file_per_turn):
     """Convert an xml file (v1 or v2) to a json file for web demo
     This json file can be used as rawContent of
     https://facebook.github.io/draft-js/.
@@ -50,12 +61,10 @@ def xml_to_draft_js_content(xml_file, destination):
 
     previous_speaker = None
     previous_gender = None
+    spk_turn = 0
     blocks = []
-    entityMap = {}
+    entity_map = {}
     entity_key = 1
-    output = \
-        codecs.open(destination, 'w', encoding='utf-8') \
-        if destination else sys.stdout
 
     try:
 
@@ -68,9 +77,25 @@ def xml_to_draft_js_content(xml_file, destination):
 
             speaker = sentence.attrib[spk_selector]
 
-            # Speaker change
-            if(previous_speaker is not None and speaker != previous_speaker):
-                pass
+            # Speaker change, write the previous speaker
+            if(previous_speaker is not None \
+                    and speaker != previous_speaker \
+                    and one_file_per_turn):
+
+                output = \
+                    codecs.open(get_json_filename(spk_turn, destination), 'w', encoding='utf-8') \
+                    if destination else sys.stdout
+
+                write_json(blocks, entity_map, output)
+
+                if output is not sys.stdout:
+                    output.close()
+
+                blocks = []
+                entity_map = {}
+                entity_key = 1
+
+                spk_turn = spk_turn + 1
 
             for word in sentence:
                 word_text = get_word_value(
@@ -92,7 +117,7 @@ def xml_to_draft_js_content(xml_file, destination):
                     'key': str(entity_key)
                 })
 
-                entityMap[entity_key] = {
+                entity_map[entity_key] = {
                     'type': 'WORD',
                     'mutability': 'MUTABLE',
                     'data': {
@@ -116,10 +141,19 @@ def xml_to_draft_js_content(xml_file, destination):
             previous_speaker = speaker
             previous_gender = sentence.attrib[gender_selector]
 
-        json_output = {}
-        json_output['blocks'] = blocks
-        json_output['entityMap'] = entityMap
-        print(json.dumps(json_output, indent=2, sort_keys=True), file=output)
+
+
+        if one_file_per_turn:
+            destination = get_json_filename(spk_turn, destination)
+
+        output = \
+            codecs.open(destination, 'w', encoding='utf-8') \
+            if destination else sys.stdout
+
+        write_json(blocks, entity_map, output)
+
+        if output is not sys.stdout:
+            output.close()
 
     finally:
         if output is not sys.stdout:
@@ -139,6 +173,13 @@ if __name__ == '__main__':
         "--output_file",
         help="the file you want to write too.")
 
+    parser.add_argument(
+        "--one_file_per_turn",
+        action="store_true",
+        help="split json using one file per speaker turn")
+
     args = parser.parse_args()
 
-    xml_to_draft_js_content(args.xml_file, args.output_file)
+    xml_to_draft_js_content(args.xml_file,
+                            args.output_file,
+                            args.one_file_per_turn)
