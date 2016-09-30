@@ -139,6 +139,10 @@ def xml_to_txt(source, destination, source_encoding='utf-8'):
     entries = xml_to_entries(source, destination, source_encoding)
     return write_txt(entries, destination)
 
+def xml_to_txt_speaker(source, destination, source_encoding='utf-8'):
+    entries = xml_to_entries(source, destination, source_encoding)
+    return write_txt_speaker(entries, destination)
+
 def xml_to_srt(source, destination, source_encoding='utf-8'):
     entries = xml_to_entries(source, destination, source_encoding)
     return write_subtitle(entries, destination, 'srt')
@@ -344,6 +348,51 @@ def write_txt(entries, destination = None):
         output.close()
 
 
+def write_txt_speaker(entries, destination = None, speaker_to_keep="S109"):
+    """Generic function to write a txt output based on data generated 
+    before (by reading a ctm, seg, xml, whatever)
+
+    :entries: list of tuples (word, time, length, gender, quality, speaker, new_sentence)
+    :destination: the destination file
+    :returns: nothing, write to the destination file
+
+    """
+
+    # Write to a file if provided, otherwise write to stdout
+    output = codecs.open(destination, 'w', encoding = 'utf-8') if destination else sys.stdout
+
+    # Init some defaults
+    nb_entries = len(entries)
+    words=[]
+    start_time=0
+    current_time=0
+    new_line=False
+    display_speakers=True
+    nb_chars=0
+    next_word= next_time= next_length= next_gender= next_quality= next_speaker= next_score= next_new_sentence = ""
+    content = ''
+
+    for i, entry in enumerate(entries):
+        (word, time, length, gender, quality, speaker, score, new_sentence) = entry
+
+        #if(float(score) < 0.5):
+        #    content += '(' + word + '?) '
+        #else:
+        if(speaker == speaker_to_keep):
+            content += word + " "
+	    
+        # Should I create a new line
+        #print(new_sentence)
+        if(i!=nb_entries -1):
+            (next_word, next_time, next_length, next_gender, next_quality, next_speaker, next_score, next_new_sentence) = entries[i+1]
+            if(speaker != next_speaker):
+                content = content + "\n\n"
+	    
+
+    print(content, file=output)
+
+    if output is not sys.stdout:
+        output.close()
 def write_subtitle(entries, destination = None, sub_format='srt'):
     """Generic function to write a subtitle file (srt, webvtt) based on
     data that was generated before (by reading a ctm, seg, xml, whatever)
