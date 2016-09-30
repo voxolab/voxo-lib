@@ -32,6 +32,32 @@ def number_to_alpha_script():
 
 
 @pytest.fixture
+def small_xml_v2_root(small_xml_v2_string):
+    from lxml import etree
+    root = etree.fromstring(small_xml_v2_string)
+    return root
+
+
+@pytest.fixture
+def small_xml_v2_string():
+    return """
+<show name="demo_1_dc79942a_c6ee_4d24_bfd8_b6f61344987c">
+  <sentence gender="Female" speaker="S0" type="Studio">
+    <word length="0.15" score="1.00" start="9.46" value="chez"/>
+    <word length="0.27" score="1.00" start="9.61" value="nous"/>
+    <word length="0.26" score="1.00" start="9.88" value="zéro"/>
+    <word length="0.09" score="1.00" start="10.14" value="huit"/>
+    <word length="0.47" score="1.00" start="10.23" value="cents"/>
+    <word length="0.22" score="1.00" start="10.70" value="cent"/>
+    <word length="0.31" score="1.00" start="10.95" value="onze"/>
+    <word length="0.21" score="1.00" start="11.26" value="zéro"/>
+    <word length="0.43" score="1.00" start="11.47" value="vingt-sept"/>
+    <word length="0.09" score="1.00" start="12.45" value="et"/>
+    <word length="0.08" score="1.00" start="12.54" value="j'"/>
+  </sentence>
+</show>"""
+
+@pytest.fixture
 def full_xml_v2_root(full_xml_v2_string):
     from lxml import etree
     root = etree.fromstring(full_xml_v2_string)
@@ -80,6 +106,19 @@ def full_xml_v2_string():
     <word length="0.53" score="1.00" start="20.24" value="sept"/>
     <word length="0.53" score="1.00" start="20.87" value="cinquante"/>
     <word length="0.46" score="1.00" start="21.40" value="trois"/>
+  </sentence>
+  <sentence gender="Female" speaker="S0" type="Studio">
+    <word length="0.15" score="1.00" start="9.46" value="chez"/>
+    <word length="0.27" score="1.00" start="9.61" value="nous"/>
+    <word length="0.26" score="1.00" start="9.88" value="zéro"/>
+    <word length="0.09" score="1.00" start="10.14" value="huit"/>
+    <word length="0.47" score="1.00" start="10.23" value="cents"/>
+    <word length="0.22" score="1.00" start="10.70" value="cent"/>
+    <word length="0.31" score="1.00" start="10.95" value="onze"/>
+    <word length="0.21" score="1.00" start="11.26" value="zéro"/>
+    <word length="0.43" score="1.00" start="11.47" value="vingt-sept"/>
+    <word length="0.09" score="1.00" start="12.45" value="et"/>
+    <word length="0.08" score="1.00" start="12.54" value="j'"/>
   </sentence>
 </show>"""
 

@@ -31,7 +31,8 @@ sub isANumber{
 }
 
 sub initNumberTab{
-    %num_table=("0"=>"zéro","1"=>"un",
+    %num_table=("0"=>"zéro",
+                "1"=>"un",
                 "2"=>"deux",
                 "3"=>"trois",
                 "4"=>"quatre",

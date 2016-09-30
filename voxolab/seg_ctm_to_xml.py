@@ -74,8 +74,11 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
                 previous_speaker = None
                 speaker_turns = []
                 speaker_sentences = []
-                sentence = []
+                sentence = {"words": []}
+                sentence_start = None
+                sentence_end = None
                 nb_cuts = len(cuts)
+                
 
                 for line in ctm:
 
@@ -97,9 +100,16 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
                     length_str = values[3]
                     length = int(float(length_str)*100)
 
+
                     # Skip words if we don't have the seg for it
                     if(start < first_frame):
                         continue
+
+                    if sentence_start is None:
+                        sentence_start = float(start_str)
+
+                    # Current sentence end, if it's the end of the sentence
+                    sentence_end = float(start_str) + float(length_str)
 
                     # Get the speaker if we have an entry for it in the .seg file
                     if(start in frames):
@@ -130,7 +140,9 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
 
                     # Speaker change
                     if(previous_speaker is not None and previous_speaker != speaker_id):
+
                         speaker_sentences.append(sentence)
+
                         speaker_turns.append({
                             "id":previous_speaker,
                             "gender":previous_gender,
@@ -139,13 +151,19 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
                             "sentences":speaker_sentences
                         })
                         speaker_sentences = []
-                        sentence = []
+                        sentence = {"words": []}
+                        sentence_start = float(start_str)
+
                     elif(should_cut and previous_speaker is not None):
                         #No speaker change but we should put the word on a new line
                         speaker_sentences.append(sentence)
-                        sentence = []
+                        sentence = {"words": []}
+                        sentence_start = float(start_str)
 
-                    sentence.append(word)
+                    sentence["words"].append(word)
+                    sentence["start"] = sentence_start
+                    sentence["end"] = sentence_end
+
                     previous_speaker = speaker_id
                     previous_quality = quality
                     if(start in frames):
@@ -184,10 +202,24 @@ def seg_ctm_to_xml(seg_file, ctm_file, out_file = None, input_encoding = 'utf-8'
                     for sentence in sentences:
                         # another child with text
                         #<sentence end="32.61" speaker="S105" gender="Female" start="15.12" type="Studio">
-                        child_sentence = etree.Element('sentence', speaker=speaker, gender=gender, type=quality)
+                        child_sentence = etree.Element(
+                            'sentence',
+                            speaker=speaker,
+                            gender=gender,
+                            type=quality,
+                            start="{0:.2f}".format(sentence["start"]),
+                            end="{0:.2f}".format(sentence["end"]))
+
                         root.append(child_sentence)
-                        for word in sentence:
-                            child_word = etree.Element('word', length=word['length'], start=word['start'], value=word['word'], score=word['score'])
+
+                        for word in sentence["words"]:
+                            child_word = etree.Element(
+                                'word',
+                                length=word['length'],
+                                start=word['start'],
+                                value=word['word'],
+                                score=word['score'])
+
                             child_sentence.append(child_word)
 
                 # pretty string
